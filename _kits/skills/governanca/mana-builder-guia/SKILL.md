@@ -158,12 +158,37 @@ Vai pra cada uma que ele confirmar. Depois de todas, monta o checklist final.
 
 - Instalação: `pip install "git+https://github.com/Sementesmana/mana-habilidade-pseudonimizar-pii.git@v0.1.0"`
 
-#### 🌾 Consome pedidos do Simple Agro?
+#### 🌾 Consome pedidos do Simple Agro? (LEITURA)
 
-**SIM → USE a habilidade `mana-habilidade-enriquecer-sa` v0.1.0** (enriquece com obtentora/tecnologia/terceiro do catálogo)
+**Opção preferida — HUB `agente-financeiro-sa`** (fonte única de leitura consolidada, cache 20min):
+
+- Chama HTTP `GET {AGENTE_FINANCEIRO_SA_URL}/api/financeiro?cnpj=X`
+- Também tem `/api/dataset` (dados brutos) e `/api/productgroups` (enrichment)
+- Credenciais SA ficam no hub, não vazam
+
+#### 🌾 Precisa LER e ESCREVER no Simple Agro (login, orders, clients, wallets)?
+
+**SIM → USE o SDK `mana-habilidade-simpleagro` v0.1.0** (SDK oficial, publicado 2026-06-30)
+
+- Instalação: `pip install "git+https://github.com/Sementesmana/mana-habilidade-simpleagro.git@v0.1.0"`
+- Cobre TUDO: login OAuth + auto-relogin, CRUD Orders/Clients/Wallets/Properties, catálogos, pricing com juros, geoloc, ERP classificado
+- **14 módulos, 2221 linhas, 116 testes, 82% cobertura**
+- Uso mínimo:
+  ```python
+  from mana_habilidade_simpleagro import SimpleAgro
+  sa = SimpleAgro()   # lê env vars SA_BASE_URL, SA_USERNAME, SA_PASSWORD, SA_SAFRA_ID, SA_GRUPO_ID
+  pedidos = sa.orders.list()
+  cliente = sa.clients.buscar(cpf_cnpj="123")[0]
+  pid, numero = sa.orders.criar_pedido(cabecalho, itens, parcelas)
+  ```
+- **Baixar SKILL.md canônico:** https://github.com/Sementesmana/mana-habilidade-simpleagro/blob/main/SKILL.md
+- **Env vars:** `SA_BASE_URL`, `SA_USERNAME`, `SA_PASSWORD`, `SA_SAFRA_ID`, `SA_GRUPO_ID`
+
+#### 🌾 Só quer ENRIQUECER pedidos SA já lidos (obtentora/tecnologia/terceiro)?
+
+**SIM → USE `mana-habilidade-enriquecer-sa` v0.1.0** (utilitário focado, mais leve)
 
 - Instalação: `pip install "git+https://github.com/Sementesmana/mana-habilidade-enriquecer-sa.git@v0.1.0"`
-- OU: consome direto o hub `agente-financeiro-sa` (`/api/financeiro`) — fonte canônica
 
 #### 📎 Extrai texto de PDF (OCR + pdfplumber)?
 
@@ -237,23 +262,4 @@ Depois desse checklist, o dev vai usar UMA das skills específicas:
 2. ⚠️ **WhatsApp sempre pelo hub** (`agente-whatsapp`). Nunca Z-API direto.
 3. ⚠️ **Credenciais só em env var** do Railway. Nunca hardcode.
 4. ⚠️ **Deploy via `git push`**. Nunca `railway up`.
-5. ⚠️ **Repo privado ok pra app/agente**. Pra habilidade que outros vão consumir, precisa público (Xayer promove).
-6. ⚠️ **Não mexer em produção sem processo** — comparação antes/depois + aval explícito (lição 2026-06-28).
-7. ⚠️ **Habilidades são referência, não código pronto.** Você (Cowork) COMPÕE código novo usando a API delas, não copia exemplo.
-8. ⚠️ **Se falta feature numa habilidade, contribui de volta** (PR). Não fork, não duplica.
-
-## Referências
-
-- ADR modelo federado: `2026-06-14` (no CLAUDE.md do vault)
-- ADR gateway obrigatório: `2026-06-13-padrao-llm-gateway-e-porta-unica-whatsapp`
-- Runbook checklist completo: `ManaVault/09-Runbooks/checklist-nova-solucao-mana.md`
-- Runbook onboarding dev novo: `ManaVault/09-Runbooks/onboarding-novo-dev.md`
-- Índice de habilidades: `ManaVault/06-Agentes-e-Skills/habilidades/_index.md`
-- Skills irmãs relacionadas: `novo-agente-mana`, `mana-arquitetura-padrao`, `onboarding-dono-agente`
-
-## Se o dev ficar travado
-
-- Nada acontece automático — sempre há um humano no ciclo pra decisões grandes
-- Se travar num acesso (GitHub/Railway) → chamar Xayer
-- Se travar em decisão arquitetural (novo padrão) → escrever ADR proposto, submeter pro Xayer
-- Se travar em bug de habilidade Maná → abrir issue no repo da habilidade
+5. ⚠️ **Repo privado ok pra app/agente**. Pra habili
