@@ -13,7 +13,7 @@ description: >-
   usar, roteia pra skills específicas (novo-agente-mana, nova-habilidade-mana, etc).
 categoria: governanca
 owner: xayer-mana
-versao-skill: 1.0.0
+versao-skill: 1.0.1
 ultima-revisao: 2026-06-30
 ativacao:
   - quero criar
@@ -68,6 +68,29 @@ Você é o **guia** — pergunta o que o dev quer, mapeia pros recursos disponí
 - **Vault:** `~/Desktop/ORQUESTRADOR/ManaVault/` — memória compartilhada
 - **Fluxo autônomo:** dev cria repo privado direto no Sementesmana + service no Railway, sem passar por Xayer (Caminho A, ADR 2026-06-14 modelo federado)
 - **Se precisar repo público** (só pra habilidade): Dayan cria privado → avisa Xayer → Xayer promove pra público em Settings do repo (limitação plano Free)
+
+## 0️⃣ Antes de começar — sincronize (OBRIGATÓRIO todo dia)
+
+Antes de tocar em QUALQUER coisa, puxe o estado atual do GitHub. Sem isso você trabalha em cima de estado velho e bate conflito na hora do push.
+
+```bash
+cd ~/Desktop/ORQUESTRADOR/ManaVault
+git pull
+
+# E se você já tem clone local do agente/habilidade que vai mexer:
+cd ~/Desktop/ORQUESTRADOR/<nome-do-repo>
+git pull
+```
+
+**Por quê:** modelo federado (ADR 2026-06-14) trata GitHub como fonte da verdade e cada máquina como cópia descartável. Outros donos (Xayer, Dayan, Lorena, futuros) podem ter empurrado notas novas, ADRs, novas habilidades, mudanças em SDKs desde ontem. Se você não puxa, você:
+- Recria coisa que já existe (drift)
+- Consome versão antiga de habilidade/SDK (bug fantasma)
+- Ignora ADR que virou regra ontem
+- No push, dá `non-fast-forward` e você trava
+
+**Ao terminar de mexer:** `git push` no repo do agente/habilidade E no ManaVault (se editou nota). Sem push, seu trabalho fica só na sua máquina e você bloqueia os outros — o modelo federado quebra.
+
+**Se der conflito no pull** (raro se você seguir "1 motorista por solução"): pare e chame Xayer. Não force merge sem entender o que o outro dono mudou.
 
 ## Perguntas — faça UMA por vez, aguarde resposta
 
@@ -234,31 +257,4 @@ Sintetize o que o dev precisa fazer, na ORDEM:
 ✅ DEPLOY NO RAILWAY
 9. Railway → + New Project → Deploy from GitHub Repo → escolhe seu repo
 10. Configure env vars no painel Variables (todas as vars que você usou local)
-11. Aguarde build + verifique /health
-
-✅ DOCUMENTAR
-12. Nota canônica em `ManaVault/06-Agentes-e-Skills/<nome>.md` (template `_Templates/nota-agente.md`)
-13. Se decisão arquitetural grande → ADR em `ManaVault/08-Decisoes/YYYY-MM-DD-titulo.md`
-14. git commit + push no ManaVault
-
-✅ AVISAR XAYER (só se aplicável)
-15. Se criou HABILIDADE e precisa ser público (pra outros consumirem via pip) → mande pro Xayer:
-    "Criei Sementesmana/mana-habilidade-X, precisa promover pra público"
-16. Se criou service NOVO no Railway com uso de LLM → peça chave virtual do gateway
-```
-
-### 5️⃣ Aponte pros próximos passos
-
-Depois desse checklist, o dev vai usar UMA das skills específicas:
-
-- Criar agente/app → skill `novo-agente-mana` (já instalada)
-- Criar habilidade → skill `nova-habilidade-mana` (se não existir, use o template diretamente)
-- Publicar no marketplace de skills → skill `plugin-mana-skills` (Onda 1, futuro)
-
----
-
-## Regras críticas que a skill DEVE lembrar o dev
-
-1. ⚠️ **LLM sempre pelo gateway** (`mana-llm-gateway`). Nunca `api.anthropic.com` direto.
-2. ⚠️ **WhatsApp sempre pelo hub** (`agente-whatsapp`). Nunca Z-API direto.
-3. ⚠️ **Credenciais só em env var** do Railway. Nunca hardcode
+11. Aguarde build + ver
