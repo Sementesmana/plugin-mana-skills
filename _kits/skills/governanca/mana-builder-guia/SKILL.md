@@ -168,21 +168,22 @@ Vai pra cada uma que ele confirmar. Depois de todas, monta o checklist final.
 
 #### 🌾 Precisa LER e ESCREVER no Simple Agro (login, orders, clients, wallets)?
 
-**SIM → USE o SDK `mana-habilidade-simpleagro` v0.1.0** (SDK oficial, publicado 2026-06-30)
+**SIM → USE o SDK `mana-simpleagro` v0.1.0** (SDK Camada 2A da Maná Builder, publicado 2026-06-30)
 
-- Instalação: `pip install "git+https://github.com/Sementesmana/mana-habilidade-simpleagro.git@v0.1.0"`
+- Instalação: `pip install "git+https://github.com/Sementesmana/mana-simpleagro.git@v0.1.0"`
 - Cobre TUDO: login OAuth + auto-relogin, CRUD Orders/Clients/Wallets/Properties, catálogos, pricing com juros, geoloc, ERP classificado
 - **14 módulos, 2221 linhas, 116 testes, 82% cobertura**
 - Uso mínimo:
   ```python
-  from mana_habilidade_simpleagro import SimpleAgro
+  from mana_simpleagro import SimpleAgro
   sa = SimpleAgro()   # lê env vars SA_BASE_URL, SA_USERNAME, SA_PASSWORD, SA_SAFRA_ID, SA_GRUPO_ID
   pedidos = sa.orders.list()
   cliente = sa.clients.buscar(cpf_cnpj="123")[0]
   pid, numero = sa.orders.criar_pedido(cabecalho, itens, parcelas)
   ```
-- **Baixar SKILL.md canônico:** https://github.com/Sementesmana/mana-habilidade-simpleagro/blob/main/SKILL.md
+- **Baixar SKILL.md canônico:** https://github.com/Sementesmana/mana-simpleagro/blob/main/SKILL.md
 - **Env vars:** `SA_BASE_URL`, `SA_USERNAME`, `SA_PASSWORD`, `SA_SAFRA_ID`, `SA_GRUPO_ID`
+- ⚠️ Aparece no cockpit `/portfolio` do agente-monitor no card **SDKs** (não Habilidades) — SDK ≠ Habilidade na arquitetura Maná.
 
 #### 🌾 Só quer ENRIQUECER pedidos SA já lidos (obtentora/tecnologia/terceiro)?
 
@@ -260,6 +261,4 @@ Depois desse checklist, o dev vai usar UMA das skills específicas:
 
 1. ⚠️ **LLM sempre pelo gateway** (`mana-llm-gateway`). Nunca `api.anthropic.com` direto.
 2. ⚠️ **WhatsApp sempre pelo hub** (`agente-whatsapp`). Nunca Z-API direto.
-3. ⚠️ **Credenciais só em env var** do Railway. Nunca hardcode.
-4. ⚠️ **Deploy via `git push`**. Nunca `railway up`.
-5. ⚠️ **Repo privado ok pra app/agente**. Pra habili
+3. ⚠️ **Credenciais só em env var** do Railway. Nunca hardcode
