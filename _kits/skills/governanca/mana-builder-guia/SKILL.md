@@ -13,7 +13,7 @@ description: >-
   usar, roteia pra skills específicas (novo-agente-mana, nova-habilidade-mana, etc).
 categoria: governanca
 owner: xayer-mana
-versao-skill: 1.0.2
+versao-skill: 1.0.3
 ultima-revisao: 2026-07-02
 ativacao:
   - quero criar
