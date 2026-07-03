@@ -13,8 +13,8 @@ description: >-
   usar, roteia pra skills específicas (novo-agente-mana, nova-habilidade-mana, etc).
 categoria: governanca
 owner: xayer-mana
-versao-skill: 1.0.1
-ultima-revisao: 2026-06-30
+versao-skill: 1.0.2
+ultima-revisao: 2026-07-02
 ativacao:
   - quero criar
   - novo agente
@@ -250,11 +250,94 @@ Sintetize o que o dev precisa fazer, na ORDEM:
 5. Implemente sua lógica de negócio
 6. Testes pytest (mínimo 70% cobertura pra habilidade; smoke pra agente)
 
-✅ PUBLICAR NO GITHUB
-7. git init + commit + criar repo Sementesmana/<nome> (privado no browser, ou via gh CLI)
-8. git push + git tag v0.1.0 (se habilidade) + git push --tags
+✅ PUBLICAR NO GITHUB (etapas 7-8 — comandos executáveis abaixo)
+✅ DEPLOY NO RAILWAY (etapas 9-11 — só pra agente Flask; pra habilidade/spec pula)
+✅ DOCUMENTAR (etapa 12-14 — sempre)
+✅ AVISAR XAYER (etapa 15-16 — só se aplicável)
+```
 
-✅ DEPLOY NO RAILWAY
-9. Railway → + New Project → Deploy from GitHub Repo → escolhe seu repo
-10. Configure env vars no painel Variables (todas as vars que você usou local)
-11. Aguarde build + ver
+### 5️⃣ EXECUÇÃO: publicar no GitHub + Railway (fluxo autônomo — comandos reais)
+
+> Etapa OPERACIONAL. **Você (Claude do Cowork do dev) faz o passo-a-passo executando** — não delega pro humano tarefa técnica que dá pra automatizar.
+
+#### 5.1 Pré-requisitos (checar 1x — só na 1ª vez que o dev publica algo)
+
+```bash
+# 1. gh CLI instalado?
+gh --version 2>&1 | head -1
+# Se falta → instala:
+#   Windows: winget install --id GitHub.cli
+#   macOS:   brew install gh
+#   Linux:   sudo apt install gh   (ou baixa .deb do release)
+
+# 2. Autenticado?
+gh auth status 2>&1 | head -3
+# Se falta → gh auth login (escolhe HTTPS + Login with browser + Sementesmana como scope)
+
+# 3. Git config global?
+git config --global user.name && git config --global user.email
+# Se vazio:
+#   git config --global user.name "Nome do Dev"
+#   git config --global user.email "email@sementesmana.com.br"
+
+# 4. Railway CLI (opcional — o painel web resolve tudo):
+railway --version 2>&1 | head -1
+# Se falta e quiser CLI: npm i -g @railway/cli && railway login
+```
+
+**Se algum passo faltar, VOCÊ instala/configura junto com o dev.** Não pare o fluxo dizendo "instale isso e volte".
+
+#### 5.2 Se AGENTE Flask — checar/criar arquivos obrigatórios pro Railway buildar
+
+Railway precisa disso na raiz do repo pra saber startar o app:
+
+```bash
+cd ~/Desktop/ORQUESTRADOR/<nome-do-artefato>
+
+# Procfile — diz ao Railway o comando de start
+[ -f Procfile ] || echo "web: gunicorn app:app --workers=1 --timeout=120" > Procfile
+
+# requirements.txt — dependências Python
+[ -f requirements.txt ] || cat > requirements.txt <<'EOF'
+Flask>=3.0
+gunicorn>=22.0
+requests>=2.31
+python-dotenv>=1.0
+EOF
+
+# runtime.txt (opcional, recomendado)
+[ -f runtime.txt ] || echo "python-3.11" > runtime.txt
+
+# .gitignore
+[ -f .gitignore ] || cat > .gitignore <<'EOF'
+__pycache__/
+*.pyc
+.env
+.venv/
+venv/
+.DS_Store
+node_modules/
+EOF
+```
+
+**Se for habilidade Python (não Flask)** — Railway não entra. Só GitHub + tag. Pula pra 5.3.
+
+**Se for skill/spec markdown puro** — Railway não entra. Push da skill/spec pro repo do plugin ou pro repo do agente. Pula pra 5.3.
+
+#### 5.3 Push 1 — criar repo + primeiro commit + push (1 bloco)
+
+```bash
+cd ~/Desktop/ORQUESTRADOR/<nome-do-artefato>
+
+git init -b main 2>/dev/null || true
+git add -A
+git commit -m "feat: scaffold inicial <nome-do-artefato>"
+
+# Cria repo privado direto na org Sementesmana + configura remote + push (tudo em 1)
+gh repo create Sementesmana/<nome-do-artefato> --private --source=. --push
+
+# Se for habilidade Python, marca versão inicial
+git tag v0.1.0 && git push --tags
+```
+
+**Se `gh repo create` falhar** com "resource not accessible" → o dev não tem permissão de admin na org. Fallback
