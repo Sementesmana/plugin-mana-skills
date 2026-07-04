@@ -36,6 +36,25 @@ description: >-
 - Continuar um piloto pelo hub quando o dono travou (créditos, máquina, bug)
 - Replicar a arquitetura multi-máquina / padronizar setup
 
+## Quem conduz — hub OU o próprio dono (auto-condução)
+
+Esta skill serve pros dois. **O dono pode se auto-conduzir** nas Fases 2, 3 e 4
+(máquina, Cowork, smoke test) — são todas executáveis por ele. A ÚNICA coisa que
+exige o hub é a **Fase 1** (convites GitHub/Railway — só admin da org convida).
+
+**Auto-condução:** o dono instala esta skill + a `mana-memoria-operacional`, e manda
+UMA mensagem ao hub pedindo exatamente isto:
+```
+Preciso de acesso pra assumir o <agente>:
+1. GitHub: Collaborator (Write) em Sementesmana/<agente> e Sementesmana/mana-vault
+   — meu username REAL é: <username>
+2. Railway: convite Member — meu email: <email>
+3. Ativa o Watch → All Activity nos repos (pro teu acompanhamento)
+```
+Recebeu os convites e aceitou → segue as Fases 2-4 sozinho com o Claude dele.
+Claude do dono: ao conduzir, siga o padrão 1-passo-por-vez com critério de
+"deu certo" observável em cada passo.
+
 ## Pré-decisões obrigatórias (perguntar ao hub antes)
 
 1. **Qual agente**? 2. **Username GitHub REAL** do dono (confirmar — erro aqui dá acesso
