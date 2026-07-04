@@ -11,6 +11,8 @@ description: >-
   com: git pull/push falhando, arquivo que "não salva", SyntaxError fantasma,
   sync pendurado, deploy que não sobe, Railway, banco-mana remoto. Se a
   conversa é "por que isso não funciona na minha máquina?" — use esta skill.
+  v1.1: além da memória, GERA o CLAUDE.md do repo do agente (contrato de
+  trabalho que viaja no Git) — peça "semeia a memória e configura o repo".
 ---
 
 # Memória Operacional Maná — kit do dono de agente
@@ -19,6 +21,63 @@ description: >-
 > gotchas em memória de Cowork + vault. Uma máquina nova começa do zero e
 > redescobre tudo na dor. Esta skill é essa memória **empacotada** — instale e
 > peça ao Claude: *"semeia a memória operacional"*.
+
+## 0. Configurar o repo — CLAUDE.md do dono (uma vez por agente)
+
+Claude: se o repo do agente do dev NÃO tem `CLAUDE.md` na raiz (ou tem um
+desatualizado), crie a partir do template abaixo, preenchendo `<DONO>` e
+`<AGENTE>`. Esse arquivo viaja no Git — vale em qualquer máquina que clonar.
+Commit junto com o trabalho do dia ("chore: CLAUDE.md do dono").
+
+```markdown
+# <AGENTE> — regras de trabalho (dono: <DONO>)
+
+> Claude: leia este arquivo INTEIRO antes de qualquer tarefa neste repo.
+
+## Papéis
+- Dono deste agente: <DONO>. Decide o que muda. O hub (Xayer) é revisor.
+- Claude faz o trabalho técnico e reporta no final. Não pergunta
+  "quer que eu faça?" no meio — faz. Recua só em: credencial que só o
+  dono tem, 403 do GitHub, decisão de negócio.
+
+## Git (o sandbox não autentica — quem pusha é o dono no Git Bash)
+- ANTES de mexer: `git status` (se sujo: `git stash`) → `git pull`.
+- DEPOIS de mexer: Claude valida (py_compile + smoke em /tmp), então
+  entrega UM comando pronto: `git add -A && git commit -m "..." && git push`.
+- `index.lock` travando: `rm -f .git/index.lock` e repete.
+- 1 motorista por vez neste repo. Commits pequenos e frequentes.
+
+## Deploy
+- Deploy = `git push` → Railway auto-deploya ~2 min. NUNCA `railway up`.
+- Credenciais SÓ em env vars no Railway. Nunca no código, nunca no chat.
+- Validar depois: /health + log do Railway + teste no painel.
+
+## Arquitetura obrigatória (Maná)
+- LLM sempre via mana-llm-gateway. WhatsApp sempre via hub agente-whatsapp
+  (classe + idempotency_key). Dedup por requisição.
+- Fonte lenta atrás de painel → mana-habilidade-data-lake-pg (lake-first).
+- Receitas: skills mana-arquitetura-padrao + akita + novo-agente-mana.
+
+## Memória que viaja
+- O SKILL.md deste repo é a nota canônica do agente. Mudou comportamento,
+  endpoint, env var ou integração → atualizar o SKILL.md NO MESMO push.
+- Decisão arquitetural grande → avisar o hub (vira ADR no ManaVault).
+- Se `ManaVault/` estiver clonado ao lado: consultar 08-Decisoes/_index.md
+  e 09-Runbooks/ antes de propor padrão novo.
+
+## Fluxo com o dono
+- Um comando por vez. Esperar o resultado antes do próximo.
+- Divergência entre doc e realidade → sinalizar ANTES de prosseguir.
+```
+
+**Instruções de projeto do Cowork (dev cola em Projeto → instruções):**
+
+```
+Trabalho no <AGENTE> (repo com CLAUDE.md na raiz — seguir SEMPRE).
+Antes de qualquer tarefa: ler o CLAUDE.md e o SKILL.md do repo.
+Skill instalada mana-memoria-operacional cobre gotchas de máquina
+(git/mount/deploy). Sou o dono; Claude executa e reporta no final.
+```
 
 ## 1. Semeadura — fazer na PRIMEIRA sessão (uma vez)
 
@@ -131,10 +190,12 @@ no MEMORY.md pra cada um). Conteúdo de cada seed nas seções 2–6.
    `Sementesmana/plugin-mana-skills`, pasta
    `_kits/skills/governanca/mana-memoria-operacional/`).
 2. Cowork → Personalizar → Habilidades → Adicionar → cole.
-3. Na primeira conversa: *"semeia a memória operacional"* — Claude cria os
-   seeds da seção 1 e a máquina nasce com a memória da casa.
+3. Na primeira conversa: *"semeia a memória operacional e configura o repo"*
+   — Claude cria os seeds da seção 1 **e** o CLAUDE.md da seção 0. A máquina
+   nasce com a memória da casa e o repo com o contrato de trabalho.
 
 ---
-*v1.0.0 — 2026-07-03. Origem: memória acumulada da máquina-hub (Xayer) +
-incidentes reais (index.lock e truncamento de mount no piloto Dayan 2;
-sync pendurado por socket morto 2026-07-03; vazamento de pool 2026-07-03).*
+*v1.1.0 — 2026-07-03. v1.1 adiciona seção 0 (CLAUDE.md do dono + instruções
+de projeto). Origem: memória acumulada da máquina-hub (Xayer) + incidentes
+reais (index.lock e truncamento de mount no piloto Dayan 2; sync pendurado
+por socket morto 2026-07-03; vazamento de pool 2026-07-03).*
