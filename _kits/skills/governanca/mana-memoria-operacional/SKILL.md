@@ -183,6 +183,33 @@ no MEMORY.md pra cada um). Conteúdo de cada seed nas seções 2–6.
   → atualizar o SKILL.md/nota do repo no mesmo push.
 - **Drift entre doc e realidade** → sinalizar o dono ANTES de prosseguir.
 
+## 7. Repo vizinho como referência (não reinvente padrão)
+
+Antes de inventar padrão (botão, pool, guard, painel, fan-out, state machine),
+**clone o agente que já resolveu isso em produção** e copie adaptando:
+`cd ~/Desktop/ORQUESTRADOR && git clone https://github.com/Sementesmana/<agente>.git`
+(clone de leitura — NUNCA editar repo de outro dono sem coordenar).
+
+| Preciso de... | Clonar | O que copiar |
+|---|---|---|
+| Data lake / botão "Atualizar agora" | `agente-comercio-revendas` | sync lake-first, botão com estado |
+| Pool Postgres robusto + guard de job background | `agente-comercio-revendas` | db.py, api.py `_disparar_sync` |
+| Painel financeiro com cache + drill-down + filtros | `agente-financeiro-sa` | /api/dataset, enrichment SA |
+| Fan-out DM + portal ocorrências + Pareto | `agente-gestor-comercial` | pipeline gaps, cobrar 1-clique |
+| State machine votação + gate humano + ata Word | `agente-comite-credito` | pauta→votos→ata→executeActivity |
+| Rota OSRM + cotação WhatsApp com retorno | `agente-tms` | webhook-retorno, tel match |
+| Classificação docs Claude → SE com atributos | `agente-documentos` | triagem Haiku, urn:attributes |
+| Bot WhatsApp determinístico + PDF/PNG | `agente-gestor-estoque` | harness zero-LLM, send-image |
+| PWA mobile GPS/foto → SE | `agente-km` | overlay foto, SOAP sessão |
+| Roteamento webhooks Z-API / keywords DM | `agente-router` | GRUPO_IDS, relay |
+
+Copiou o mesmo trecho pela 2ª vez em agentes diferentes → candidato a
+habilidade canônica: avisar o hub.
+
+**Conectores/MCPs:** dev novo NÃO instala conector nenhum no D1 — o agente fala
+com SE/SA pelo código (env vars), não pelo chat. Instale MCP só quando a tarefa
+pedir (e provavelmente o que a tarefa pede é skill/habilidade do cockpit).
+
 ## Como instalar (dev novo)
 
 1. Cockpit Maná Builder → card **Skills (plugin)** → `mana-memoria-operacional`
@@ -195,7 +222,8 @@ no MEMORY.md pra cada um). Conteúdo de cada seed nas seções 2–6.
    nasce com a memória da casa e o repo com o contrato de trabalho.
 
 ---
-*v1.1.0 — 2026-07-03. v1.1 adiciona seção 0 (CLAUDE.md do dono + instruções
-de projeto). Origem: memória acumulada da máquina-hub (Xayer) + incidentes
-reais (index.lock e truncamento de mount no piloto Dayan 2; sync pendurado
-por socket morto 2026-07-03; vazamento de pool 2026-07-03).*
+*v1.2.0 — 2026-07-03. v1.1 adiciona seção 0 (CLAUDE.md do dono + instruções
+de projeto); v1.2 adiciona seção 7 (tabela repo-vizinho-como-referência +
+regra de conectores). Origem: memória acumulada da máquina-hub (Xayer) +
+incidentes reais (index.lock e truncamento de mount no piloto Dayan 2; sync
+pendurado por socket morto 2026-07-03; vazamento de pool 2026-07-03).*
