@@ -81,3 +81,4 @@ Veja `examples/reader.py` — reader genérico, fail-soft, com epoch→data e me
 
 - **2026-06-30** — publicada v0.1.0 (`alpha`).
 - **2026-07-02** — **`producao`**: `agente-pedidos` migrou `get_all_open_workflows_from_se()` pra consumir o pacote (`ler_dataset(..., "SCSCRED", map_row=...)`), deploy `de4822a`, smoke em produção (`/api/gaps-sem-cre` = 53 batendo com o GRD, sem regressão). **1ª habilidade Maná Builder a fechar o gate completo** — recomendada pra adoção, pode ser dependência dura de outras habilidades.
+- **2026-07-02** — **2º consumidor**: `agente-gestor-comercial` migrou `softexpert.py` (SCSCRED) + `atvsc_se.py` (ATVSC) do transporte inline pro pacote (`SEDatasetReader.ler` / `ler_dataset`), mantendo os helpers de domínio locais. Cópias inline eliminadas nos dois pontos.
