@@ -76,3 +76,8 @@ Veja `examples/reader.py` — reader genérico, fail-soft, com epoch→data e me
 
 - `SCSCRED` (agente-gestor-comercial, 2026-06-29): substituiu `getTableRecord(scred)` — 2679+ linhas paginadas → **49 numa chamada**. ADR `2026-06-29-gestor-comercial-scred-via-dataset-integration`.
 - `ATVSC` (agente-gestor-comercial, 2026-06-25/29): atividade "Ajustar Crédito" habilitada + **motivo** (dscomment via `fgactionicon=33`). ADR `2026-06-25-gestor-comercial-categoria-ajuste-credito`.
+
+## Histórico do gate (ADR 2026-06-28)
+
+- **2026-06-30** — publicada v0.1.0 (`alpha`).
+- **2026-07-02** — **`producao`**: `agente-pedidos` migrou `get_all_open_workflows_from_se()` pra consumir o pacote (`ler_dataset(..., "SCSCRED", map_row=...)`), deploy `de4822a`, smoke em produção (`/api/gaps-sem-cre` = 53 batendo com o GRD, sem regressão). **1ª habilidade Maná Builder a fechar o gate completo** — recomendada pra adoção, pode ser dependência dura de outras habilidades.
