@@ -13,7 +13,7 @@ description: >-
 categoria: habilidade
 sub-categoria: notificacoes
 owner: xayer-mana
-versao-skill: 0.1.0
+versao-skill: 0.2.0
 ultima-revisao: 2026-07-06
 ativacao:
   - notificacao whatsapp
@@ -63,7 +63,7 @@ E **compõe** a lógica específica do agente:
 ## Instalação
 
 ```bash
-pip install "git+https://github.com/Sementesmana/mana-habilidade-notificacao-whatsapp.git@v0.1.0"
+pip install "git+https://github.com/Sementesmana/mana-habilidade-notificacao-whatsapp.git@v0.2.0"
 ```
 
 Env vars esperadas no agente consumidor:
@@ -224,6 +224,52 @@ scheduler.shutdown()
 
 Timezone default: `America/Sao_Paulo`. Ajuste passando `timezone="UTC"` no construtor.
 
+### 5. `RespostaColetor` — coleta respostas com match por últimos-8-dígitos (v0.2.0)
+
+Padrão consolidado do `agente-tms` (validado E2E 2026-05-25). Fluxo: envia msg pedindo valor → recebe via `agente-router` → parseia → grava.
+
+```python
+from mana_habilidade_notificacao_whatsapp import RespostaColetor, TIPO_VALOR_NUMERICO
+
+coletor = RespostaColetor(db_url=DATABASE_URL, schema="comercializacao", match_ultimos_digitos=8)
+coletor.init_schema()
+
+# 1) Envia solicitação (via sender)
+sender.send_text(contato.whatsapp, "Qual o valor da saca de arroz?")
+
+# 2) Registra coleta esperando resposta
+coleta = coletor.criar(
+    telefone_esperado=contato.whatsapp,
+    tipo_esperado=TIPO_VALOR_NUMERICO,
+    contato_id=contato.id,
+    metadata={"produto": "arroz"},
+    prazo_horas=48,   # opcional
+)
+
+# 3) Endpoint /webhook-retorno do consumidor (após relay do agente-router)
+@app.route("/webhook-retorno", methods=["POST"])
+def webhook():
+    data = request.json
+    r = coletor.processar_resposta(
+        telefone_origem=data["telefone"],
+        texto_bruto=data["texto"],
+    )
+    if r["match"] and r["valor_parseado"] is not None:
+        salvar_cotacao(r["coleta"].contato_id, r["valor_parseado"])
+    return "ok"
+
+# Consultas
+pendentes = coletor.listar_pendentes()
+respondidas = coletor.listar_respondidas(horas_recentes=24)
+expiradas = coletor.listar_expiradas()
+```
+
+**Tipos suportados:** `TIPO_VALOR_NUMERICO` (R$ 45,50 → 45.50), `TIPO_TEXTO`, `TIPO_BOOLEAN` (sim/não), `TIPO_CHOICE` (lista de opções).
+
+**Match tolera 55/DDD/9º dígito extra** — `+55 62 99999-9999` e `62999999999` casam com a mesma coleta (últimos 8 dígitos idênticos).
+
+**Padrão pra o consumidor:** solicitar regra de relay no `agente-router` apontando pro seu `/webhook-retorno` (auth `ROUTER_SECRET`). Ver a nota do `agente-tms` no vault pra ADR de referência.
+
 ## Padrões OBRIGATÓRIOS que a habilidade força
 
 1. **WhatsApp SÓ pelo hub** — ADR 2026-06-13. Nunca Z-API direto.
@@ -292,8 +338,8 @@ Trafega **PII** (nome + whatsapp + email dos contatos). Se for enviar dado do co
 pytest tests/ --cov=mana_habilidade_notificacao_whatsapp
 ```
 
-- 88 testes passando
-- 85% cobertura (mínimo Maná: 70%)
+- 123 testes passando
+- 84% cobertura (mínimo Maná: 70%)
 - Mocks pra psycopg2 e requests — CI não precisa Postgres real
 
 ## Origem prática (padrão consolidado de 4 agentes)
