@@ -1,0 +1,19 @@
+{
+  "name": "sementesmana-skills",
+  "owner": {
+    "name": "Sementes Mana LTDA",
+    "email": "xayer@sementesmana.com.br"
+  },
+  "description": "Marketplace institucional das skills Mana Builder — hiperautomacao agro. Skills obrigatorias pra qualquer dono de agente/hub/habilidade do ecossistema Sementes Mana. Fonte unica de verdade, sync automatico via GitHub.",
+  "plugins": [
+    {
+      "name": "mana-skills",
+      "source": "./plugins/mana-skills",
+      "description": "Pacote completo das 13 skills Mana Builder: guias, scaffold, arquitetura, seguranca, conectores SoftExpert, habilidades de dados, SDKs, memoria operacional, onboarding.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Sementes Mana LTDA"
+      }
+    }
+  ]
+}
