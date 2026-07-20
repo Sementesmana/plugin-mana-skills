@@ -43,15 +43,6 @@
       }
     },
     {
-      "name": "agente-comercio-revendas",
-      "source": "./plugins/agente-comercio-revendas",
-      "description": "Plataforma de comercialização das revendas parceiras da Sementes Maná LTDA — as revendas informam periodicamente o volume já comercializado dos produtos adquiridos, e a Maná acompanha a velocidade de comercialização. Flask + PostgreSQL (schema comercializacao) no Railway, integrado ao Simple Agro via SDK mana-simpleagro + cache via habilidade data-lake-pg, scaffold via novo-agente-mana. Reaprov...",
-      "version": "1.0.0",
-      "author": {
-        "name": "Sementes Mana LTDA"
-      }
-    },
-    {
       "name": "agente-comite-credito",
       "source": "./plugins/agente-comite-credito",
       "description": "Comitê de crédito digital da Sementes Maná — 100% no grupo WhatsApp. Flask+PG (schema comite)+Railway. Pauta do CRE-001 no painel (scred, PDF Tarken, DEC-01/02/08), convocação rica no grupo (vendedor, valores com creditodefin, gateways, Tarken + pareceres), discussão e votos via agente-router, gate humano do operador. Comandos: \"gerar ata\" (todos com ≥1 msg), \"atualizar o SE\" (100% votos; unani...",

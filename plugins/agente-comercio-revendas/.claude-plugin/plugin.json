@@ -1,0 +1,5 @@
+{
+  "name": "agente-comercio-revendas",
+  "description": "Plataforma de comercialização das revendas parceiras da Sementes Maná LTDA — as revendas informam periodicamente o volume já comercializado dos produtos adquiridos, e a Maná acompanha a velocidade de comercialização. Flask + PostgreSQL (schema comercializacao) no Railway, integrado ao Simple Agro via SDK mana-simpleagro + cache via habilidade data-lake-pg, scaffold via novo-agente-mana. Reaprov...",
+  "version": "1.0.0"
+}
