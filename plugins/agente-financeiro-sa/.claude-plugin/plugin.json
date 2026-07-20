@@ -1,0 +1,5 @@
+{
+  "name": "agente-financeiro-sa",
+  "description": "Visão financeira e comercial dos pedidos Simple Agro — Sementes Maná LTDA (\"Painel Comercial SA\"). Flask no Railway, cache 20 min, 6 abas: Recebimentos/Mês, Por Pedido, Evolução, Clientes (LTV), Por Produto e Por Vendedor. A aba Por Vendedor traz ranking por receita com drill-down duplo (Vendedor→Cliente→Pedido e Vendedor→Cultivar) e filtros em cascata client-side (Vendedor, Cliente, Status, Us...",
+  "version": "1.0.0"
+}

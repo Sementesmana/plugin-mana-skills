@@ -1,0 +1,5 @@
+{
+  "name": "agente-comite-credito",
+  "description": "Comitê de crédito digital da Sementes Maná — 100% no grupo WhatsApp. Flask+PG (schema comite)+Railway. Pauta do CRE-001 no painel (scred, PDF Tarken, DEC-01/02/08), convocação rica no grupo (vendedor, valores com creditodefin, gateways, Tarken + pareceres), discussão e votos via agente-router, gate humano do operador. Comandos: \"gerar ata\" (todos com ≥1 msg), \"atualizar o SE\" (100% votos; unani...",
+  "version": "1.0.0"
+}

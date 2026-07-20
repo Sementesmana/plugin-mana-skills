@@ -1,0 +1,5 @@
+{
+  "name": "agente-secretaria",
+  "description": "Assistente executiva de agenda por áudio/texto no WhatsApp — Sementes Maná LTDA. Serviço Flask no Railway que recebe relay do agente-router (keyword secretaria/agenda/reunião), interpreta o pedido com Claude, consulta a agenda compartilhada do Google Calendar (conta smana.comercial via OAuth2 refresh token) e agenda direto se livre / sugere horários se ocupado; responde sempre em texto. Tem cad...",
+  "version": "1.0.0"
+}

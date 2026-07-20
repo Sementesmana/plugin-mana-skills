@@ -1,0 +1,5 @@
+{
+  "name": "agente-documentos",
+  "description": "App de documentos do processo Solicitação de Crédito (SM.CV.PR.NE.CRE-001) do SoftExpert — Sementes Maná LTDA. Flask + Alpine.js no Railway com 2 abas: (1) Triagem — drag-and-drop de até 50 docs, Claude classifica por filename pseudonimizado (TIPODOC/DOCUMENTO/TITULAR/SAFRA), cria docs em CRE via newDocument com urn:attributes e associa à ATV-03 com anti-duplicação. (2) Análise Documental v2 (2...",
+  "version": "1.0.0"
+}

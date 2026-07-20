@@ -1,0 +1,5 @@
+{
+  "name": "agente-gestor-comercial",
+  "description": "Agente N3 da Sementes Mana (ex agente-gestor-credito, ADR-0009) - bot do grupo WhatsApp 'Gestor Comercial Mana'. Flask+PG+Railway: cruza pedidos a prazo do Simple Agro com scred (CRE-001) via SOAP fm_ws, classifica gaps, reconcilia state machine (schema gestor_credito), Claude Haiku gera relatorio, envia via agente-whatsapp. 3 categorias: Gap CRE (cliente), Divergencia cadastro PRAZO/VISTA (ped...",
+  "version": "1.0.0"
+}

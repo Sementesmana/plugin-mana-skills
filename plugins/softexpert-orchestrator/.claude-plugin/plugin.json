@@ -1,0 +1,5 @@
+{
+  "name": "softexpert-orchestrator",
+  "description": "Biblioteca Inteligente de Orquestração SoftExpert para Skills. Core library para integração segura com SoftExpert Workflow — fornece client SOAP robusto, WorkflowBuilder de alto nível, validação automática, retry com backoff, error classification (4 tipos), audit logging completo e fallback inteligente. Use esta skill como dependência para qualquer skill que precisa integrar com SoftExpert (CPR...",
+  "version": "1.0.0"
+}

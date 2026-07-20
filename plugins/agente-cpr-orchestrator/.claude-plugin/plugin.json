@@ -1,0 +1,5 @@
+{
+  "name": "agente-cpr-orchestrator",
+  "description": "Gerador automatizado de CPR (Cédula de Produto Rural) com Orquestração SoftExpert. Transforma dados estruturados em documentos Word preenchidos usando Claude para formatação inteligente. Suporta múltiplos tipos de garantia (CPR Penhora AF, Fiança, Confissão de Dívida, Nota Promissória) com integração ao SoftExpert para instanciar workflows, criar documentos, associar PDFs e avançar atividades. ...",
+  "version": "1.0.0"
+}

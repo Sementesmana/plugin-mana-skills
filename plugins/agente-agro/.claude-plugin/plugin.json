@@ -1,0 +1,5 @@
+{
+  "name": "agente-agro",
+  "description": "Agente de inteligência geoespacial para agricultura de precisão — Sementes Maná LTDA. Serviço Flask no Railway que processa imagens Sentinel-2 para gerar mapas NDVI, zonas de manejo via K-Means, buscar imóveis pelo CAR, gerar croquis de talhão para CPRs e consultar clima. Painel web Leaflet com múltiplos talhões simultâneos. Seleção de cena: menos nublada, mais atual ou por data. Use este skill...",
+  "version": "1.0.0"
+}

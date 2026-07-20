@@ -1,0 +1,5 @@
+{
+  "name": "agente-nf",
+  "description": "\"Agente inteligente para processamento automatizado de Notas Fiscais com 3 camadas de proteção contra reprocessamento. Captura NFs de pasta local ou email (IMAP), extrai dados via OCR+Claude AI, classifica fornecedor/centro-de-custo, instancia workflows no SoftExpert com formulário preenchido e itens detalhados. Gerencia automaticamente pasta de email (move para NF-Processadas), rastreia hashes...",
+  "version": "1.0.0"
+}

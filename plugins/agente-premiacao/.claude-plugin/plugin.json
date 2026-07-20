@@ -1,0 +1,5 @@
+{
+  "name": "agente-premiacao",
+  "description": "Bot semanal de premiação I2X da Sementes Maná LTDA. Flask + APScheduler no Railway que lê pedidos do Simple Agro (safra 26/27, grupo soja), aplica 2 campanhas de ranking de consultores e envia 2 mensagens ao grupo de WhatsApp via agente-whatsapp, toda segunda 08h BRT. Use SEMPRE que precisar trabalhar com o agente-premiacao — ajustar regras das campanhas, filtros de venda/status, conversão de e...",
+  "version": "1.0.0"
+}

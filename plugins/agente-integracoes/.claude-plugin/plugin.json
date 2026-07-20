@@ -1,0 +1,5 @@
+{
+  "name": "agente-integracoes",
+  "description": "\"Agente de integração SoftExpert ↔ Simple Agro para Sementes Maná. Consulta pedidos de venda por CPF/CNPJ no Simple Agro e sincroniza com grids do SoftExpert Workflow. Gerencia serviço Railway Flask com dois painéis web (/painel populador de grid, /painel-reais somente leitura com drill-down grupo econômico). Use este skill sempre que precisar trabalhar com o agente-integracoes — adicionar endp...",
+  "version": "1.0.0"
+}

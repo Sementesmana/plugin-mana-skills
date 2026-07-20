@@ -1,0 +1,5 @@
+{
+  "name": "agente-whatsapp",
+  "description": "Agente de envio de mensagens WhatsApp via Z-API para Sementes Maná LTDA. Serviço Flask no Railway que envia mensagens para números individuais e grupos do WhatsApp sem necessidade de aprovação de template Meta. Conecta via QR Code com número pessoal. Suporta texto livre, templates pré-definidos (crédito aprovado, reprovado, pendência de documentos) e envio em massa. Integrado ao SoftExpert como...",
+  "version": "1.0.0"
+}

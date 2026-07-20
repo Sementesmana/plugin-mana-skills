@@ -1,0 +1,5 @@
+{
+  "name": "agente-lancamento-pedido",
+  "description": "Bot WhatsApp que lança pedidos de venda no Simple Agro com conversação multi-turno, checagem/cadastro de cliente, e confirmação obrigatória",
+  "version": "1.0.0"
+}

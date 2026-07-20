@@ -1,0 +1,5 @@
+{
+  "name": "agente-gestor-credito",
+  "description": "Primeiro agente N3 da Sementes Mana, bot do grupo WhatsApp \"Gestor Comercial Mana\" (id 120363407640929433-group). Flask no Railway: cruza pedidos a prazo do Simple Agro com scred (CRE-001) via SOAP fm_ws.getTableRecord, classifica gaps (SEM_CRE, CRE_DIGITACAO, CRE_NAO_APROVADA, PEDIDO_MAIOR_QUE_APROVADO), reconcilia state machine PG (schema gestor_credito), Claude Haiku gera relatorio e envia v...",
+  "version": "1.0.0"
+}

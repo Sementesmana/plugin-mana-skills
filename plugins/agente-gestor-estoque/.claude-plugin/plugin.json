@@ -1,0 +1,5 @@
+{
+  "name": "agente-gestor-estoque",
+  "description": "Bot WhatsApp N3 da Sementes Maná LTDA que alerta a comercialização de estoque por cultivar. Lê o % de comercialização de cada cultivar do agente-estoque (/api/estoque), classifica em faixas (encalhado/avançado/crítico/ruptura) e alerta o grupo Comercial Estoque e DM via agente-whatsapp; responde inbound por texto e áudio via agente-router. Respostas determinísticas (Harness/zero-LLM): nome de v...",
+  "version": "1.0.0"
+}

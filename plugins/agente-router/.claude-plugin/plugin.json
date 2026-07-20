@@ -1,0 +1,5 @@
+{
+  "name": "agente-router",
+  "description": "Despachante central de webhooks Z-API para múltiplos bots WhatsApp — Sementes Maná LTDA. Serviço Flask no Railway que recebe todos os webhooks da Z-API, transcreve áudio inbound via Whisper (OpenAI) e roteia pra bot correto (agronomo, comercial dual-mode, plano-acao, secretaria, pesquisador, multiplicacao, financeiro, estoque) com base em grupos (GRUPO_IDS) e keywords em DM. Use esta skill SEMP...",
+  "version": "1.0.0"
+}

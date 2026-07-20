@@ -4,12 +4,273 @@
     "name": "Sementes Mana LTDA",
     "email": "xayer@sementesmana.com.br"
   },
-  "description": "Marketplace institucional das skills Mana Builder — hiperautomacao agro. Skills obrigatorias pra qualquer dono de agente/hub/habilidade do ecossistema Sementes Mana. Fonte unica de verdade, sync automatico via GitHub.",
+  "description": "Marketplace institucional Sementes Mana — 1 plugin universal (mana-skills: 13 skills obrigatorias) + 29 plugins tematicos (1 por agente/painel). Cada dono instala o universal + os dos agentes que trabalha. Sync automatico via Claude GitHub App.",
   "plugins": [
     {
       "name": "mana-skills",
       "source": "./plugins/mana-skills",
-      "description": "Pacote completo das 13 skills Mana Builder: guias, scaffold, arquitetura, seguranca, conectores SoftExpert, habilidades de dados, SDKs, memoria operacional, onboarding.",
+      "description": "Pacote institucional Mana Builder — 13 skills essenciais: mana-builder-guia (entrada), novo-agente-mana (scaffold), mana-arquitetura-padrao (LLM+WhatsApp obrigatorio), akita (seguranca), softexpert-wf-ws + softexpert-dataset-integration (SoftExpert), mana-habilidade-se-dataset-reader + mana-habilidade-data-lake-pg (dados), mana-simpleagro + mana-softexpert (SDKs), mana-habilidade-notificacao-whatsapp (notificacoes), mana-memoria-operacional (cerebro dono), onboarding-dono-agente (handoff).",
+      "version": "1.0.0",
+      "author": {
+        "name": "Sementes Mana LTDA"
+      }
+    },
+    {
+      "name": "agente-agro",
+      "source": "./plugins/agente-agro",
+      "description": "Agente de inteligência geoespacial para agricultura de precisão — Sementes Maná LTDA. Serviço Flask no Railway que processa imagens Sentinel-2 para gerar mapas NDVI, zonas de manejo via K-Means, buscar imóveis pelo CAR, gerar croquis de talhão para CPRs e consultar clima. Painel web Leaflet com múltiplos talhões simultâneos. Seleção de cena: menos nublada, mais atual ou por data. Use este skill...",
+      "version": "1.0.0",
+      "author": {
+        "name": "Sementes Mana LTDA"
+      }
+    },
+    {
+      "name": "agente-agronomo",
+      "source": "./plugins/agente-agronomo",
+      "description": "Bot WhatsApp agronomo especialista em soja da Sementes Mana LTDA. Flask + Railway que recebe relay do agente-router em grupos de agronomia, interpreta com Claude (claude-opus-4-6 via mana-llm-gateway) e responde com consultoria tecnica do portfolio Mana (20 cultivares de 4 obtentoras parceiras Neogen/SoyTech/Genetica Soy/Stine). Recomendacao assertiva de 1 variedade, posicionamento por microrre...",
+      "version": "1.0.0",
+      "author": {
+        "name": "Sementes Mana LTDA"
+      }
+    },
+    {
+      "name": "agente-bot-multiplicacao",
+      "source": "./plugins/agente-bot-multiplicacao",
+      "description": "Bot WhatsApp da Sementes Maná LTDA para pedidos do Simple Agro com Uso da Semente = MULTIPLICAÇÃO. Flask + APScheduler no Railway, cron 08/12/16 BRT, deduplica por pedido e status, envia alertas NOVO e MUDANCA_STATUS via agente-whatsapp ao grupo Trigger pedidos e responde consultas via agente-router e Claude NLP. Use SEMPRE que precisar trabalhar com o agente-bot-multiplicacao — modificar cron,...",
+      "version": "1.0.0",
+      "author": {
+        "name": "Sementes Mana LTDA"
+      }
+    },
+    {
+      "name": "agente-comite-credito",
+      "source": "./plugins/agente-comite-credito",
+      "description": "Comitê de crédito digital da Sementes Maná — 100% no grupo WhatsApp. Flask+PG (schema comite)+Railway. Pauta do CRE-001 no painel (scred, PDF Tarken, DEC-01/02/08), convocação rica no grupo (vendedor, valores com creditodefin, gateways, Tarken + pareceres), discussão e votos via agente-router, gate humano do operador. Comandos: \"gerar ata\" (todos com ≥1 msg), \"atualizar o SE\" (100% votos; unani...",
+      "version": "1.0.0",
+      "author": {
+        "name": "Sementes Mana LTDA"
+      }
+    },
+    {
+      "name": "agente-cpr-orchestrator",
+      "source": "./plugins/agente-cpr-orchestrator",
+      "description": "Gerador automatizado de CPR (Cédula de Produto Rural) com Orquestração SoftExpert. Transforma dados estruturados em documentos Word preenchidos usando Claude para formatação inteligente. Suporta múltiplos tipos de garantia (CPR Penhora AF, Fiança, Confissão de Dívida, Nota Promissória) com integração ao SoftExpert para instanciar workflows, criar documentos, associar PDFs e avançar atividades. ...",
+      "version": "1.0.0",
+      "author": {
+        "name": "Sementes Mana LTDA"
+      }
+    },
+    {
+      "name": "agente-documentos",
+      "source": "./plugins/agente-documentos",
+      "description": "App de documentos do processo Solicitação de Crédito (SM.CV.PR.NE.CRE-001) do SoftExpert — Sementes Maná LTDA. Flask + Alpine.js no Railway com 2 abas: (1) Triagem — drag-and-drop de até 50 docs, Claude classifica por filename pseudonimizado (TIPODOC/DOCUMENTO/TITULAR/SAFRA), cria docs em CRE via newDocument com urn:attributes e associa à ATV-03 com anti-duplicação. (2) Análise Documental v2 (2...",
+      "version": "1.0.0",
+      "author": {
+        "name": "Sementes Mana LTDA"
+      }
+    },
+    {
+      "name": "agente-estoque",
+      "source": "./plugins/agente-estoque",
+      "description": "Painel de controle de estoque de sementes por cultivar + módulo TSI (Tratamento Industrial de Sementes) para Sementes Maná LTDA. Serviço Flask no Railway com PostgreSQL que cruza estoque manual com pedidos do Simple Agro em tempo real. Inclui módulo TSI com cadastro de produtos químicos, receitas (tratamentos), composição produto×dose, consolidado vivo cruzando pedidos SA × receitas, drill-down...",
+      "version": "1.0.0",
+      "author": {
+        "name": "Sementes Mana LTDA"
+      }
+    },
+    {
+      "name": "agente-financeiro-sa",
+      "source": "./plugins/agente-financeiro-sa",
+      "description": "Visão financeira e comercial dos pedidos Simple Agro — Sementes Maná LTDA (\"Painel Comercial SA\"). Flask no Railway, cache 20 min, 6 abas: Recebimentos/Mês, Por Pedido, Evolução, Clientes (LTV), Por Produto e Por Vendedor. A aba Por Vendedor traz ranking por receita com drill-down duplo (Vendedor→Cliente→Pedido e Vendedor→Cultivar) e filtros em cascata client-side (Vendedor, Cliente, Status, Us...",
+      "version": "1.0.0",
+      "author": {
+        "name": "Sementes Mana LTDA"
+      }
+    },
+    {
+      "name": "agente-gestor-comercial",
+      "source": "./plugins/agente-gestor-comercial",
+      "description": "Agente N3 da Sementes Mana (ex agente-gestor-credito, ADR-0009) - bot do grupo WhatsApp 'Gestor Comercial Mana'. Flask+PG+Railway: cruza pedidos a prazo do Simple Agro com scred (CRE-001) via SOAP fm_ws, classifica gaps, reconcilia state machine (schema gestor_credito), Claude Haiku gera relatorio, envia via agente-whatsapp. 3 categorias: Gap CRE (cliente), Divergencia cadastro PRAZO/VISTA (ped...",
+      "version": "1.0.0",
+      "author": {
+        "name": "Sementes Mana LTDA"
+      }
+    },
+    {
+      "name": "agente-gestor-credito",
+      "source": "./plugins/agente-gestor-credito",
+      "description": "Primeiro agente N3 da Sementes Mana, bot do grupo WhatsApp \"Gestor Comercial Mana\" (id 120363407640929433-group). Flask no Railway: cruza pedidos a prazo do Simple Agro com scred (CRE-001) via SOAP fm_ws.getTableRecord, classifica gaps (SEM_CRE, CRE_DIGITACAO, CRE_NAO_APROVADA, PEDIDO_MAIOR_QUE_APROVADO), reconcilia state machine PG (schema gestor_credito), Claude Haiku gera relatorio e envia v...",
+      "version": "1.0.0",
+      "author": {
+        "name": "Sementes Mana LTDA"
+      }
+    },
+    {
+      "name": "agente-gestor-estoque",
+      "source": "./plugins/agente-gestor-estoque",
+      "description": "Bot WhatsApp N3 da Sementes Maná LTDA que alerta a comercialização de estoque por cultivar. Lê o % de comercialização de cada cultivar do agente-estoque (/api/estoque), classifica em faixas (encalhado/avançado/crítico/ruptura) e alerta o grupo Comercial Estoque e DM via agente-whatsapp; responde inbound por texto e áudio via agente-router. Respostas determinísticas (Harness/zero-LLM): nome de v...",
+      "version": "1.0.0",
+      "author": {
+        "name": "Sementes Mana LTDA"
+      }
+    },
+    {
+      "name": "agente-integracoes",
+      "source": "./plugins/agente-integracoes",
+      "description": "\"Agente de integração SoftExpert ↔ Simple Agro para Sementes Maná. Consulta pedidos de venda por CPF/CNPJ no Simple Agro e sincroniza com grids do SoftExpert Workflow. Gerencia serviço Railway Flask com dois painéis web (/painel populador de grid, /painel-reais somente leitura com drill-down grupo econômico). Use este skill sempre que precisar trabalhar com o agente-integracoes — adicionar endp...",
+      "version": "1.0.0",
+      "author": {
+        "name": "Sementes Mana LTDA"
+      }
+    },
+    {
+      "name": "agente-km",
+      "source": "./plugins/agente-km",
+      "description": "PWA mobile de registro de visitas com GPS, foto e cálculo de km para Sementes Maná LTDA. Flask + Railway que captura coordenadas no celular, calcula distância Haversine até o ponto-base, grava latcampo/lngcampo/kmrodados no SoftExpert e anexa a foto com overlay GPS (cidade, lat/lng, data/hora). Use este skill SEMPRE que precisar trabalhar com o agente-km — corrigir bugs do PWA mobile, ajustar o...",
+      "version": "1.0.0",
+      "author": {
+        "name": "Sementes Mana LTDA"
+      }
+    },
+    {
+      "name": "agente-lancamento-pedido",
+      "source": "./plugins/agente-lancamento-pedido",
+      "description": "Bot WhatsApp que lança pedidos de venda no Simple Agro com conversação multi-turno, checagem/cadastro de cliente, e confirmação obrigatória",
+      "version": "1.0.0",
+      "author": {
+        "name": "Sementes Mana LTDA"
+      }
+    },
+    {
+      "name": "agente-nf",
+      "source": "./plugins/agente-nf",
+      "description": "\"Agente inteligente para processamento automatizado de Notas Fiscais com 3 camadas de proteção contra reprocessamento. Captura NFs de pasta local ou email (IMAP), extrai dados via OCR+Claude AI, classifica fornecedor/centro-de-custo, instancia workflows no SoftExpert com formulário preenchido e itens detalhados. Gerencia automaticamente pasta de email (move para NF-Processadas), rastreia hashes...",
+      "version": "1.0.0",
+      "author": {
+        "name": "Sementes Mana LTDA"
+      }
+    },
+    {
+      "name": "agente-precificacao",
+      "source": "./plugins/agente-precificacao",
+      "description": "Agente de precificação e orçamento de sementes — Sementes Maná LTDA. Flask+Railway+PostgreSQL (schema precificacao). Catálogo de cultivares por safra com preços mensais por tier (ALTO/MEDIO/BAIXO), desmontagem Royalties+Germoplasma, frete OSRM, TSI, orçamentos com aprovação, painel JWT. Use SEMPRE que precisar trabalhar com agente-precificacao — painel HTML, endpoints, preços, desmontagem, fret...",
+      "version": "1.0.0",
+      "author": {
+        "name": "Sementes Mana LTDA"
+      }
+    },
+    {
+      "name": "agente-premiacao",
+      "source": "./plugins/agente-premiacao",
+      "description": "Bot semanal de premiação I2X da Sementes Maná LTDA. Flask + APScheduler no Railway que lê pedidos do Simple Agro (safra 26/27, grupo soja), aplica 2 campanhas de ranking de consultores e envia 2 mensagens ao grupo de WhatsApp via agente-whatsapp, toda segunda 08h BRT. Use SEMPRE que precisar trabalhar com o agente-premiacao — ajustar regras das campanhas, filtros de venda/status, conversão de e...",
+      "version": "1.0.0",
+      "author": {
+        "name": "Sementes Mana LTDA"
+      }
+    },
+    {
+      "name": "agente-router",
+      "source": "./plugins/agente-router",
+      "description": "Despachante central de webhooks Z-API para múltiplos bots WhatsApp — Sementes Maná LTDA. Serviço Flask no Railway que recebe todos os webhooks da Z-API, transcreve áudio inbound via Whisper (OpenAI) e roteia pra bot correto (agronomo, comercial dual-mode, plano-acao, secretaria, pesquisador, multiplicacao, financeiro, estoque) com base em grupos (GRUPO_IDS) e keywords em DM. Use esta skill SEMP...",
+      "version": "1.0.0",
+      "author": {
+        "name": "Sementes Mana LTDA"
+      }
+    },
+    {
+      "name": "agente-secretaria",
+      "source": "./plugins/agente-secretaria",
+      "description": "Assistente executiva de agenda por áudio/texto no WhatsApp — Sementes Maná LTDA. Serviço Flask no Railway que recebe relay do agente-router (keyword secretaria/agenda/reunião), interpreta o pedido com Claude, consulta a agenda compartilhada do Google Calendar (conta smana.comercial via OAuth2 refresh token) e agenda direto se livre / sugere horários se ocupado; responde sempre em texto. Tem cad...",
+      "version": "1.0.0",
+      "author": {
+        "name": "Sementes Mana LTDA"
+      }
+    },
+    {
+      "name": "agente-tms",
+      "source": "./plugins/agente-tms",
+      "description": "Agente TMS Maná (Sementes Maná) — planejamento de entregas + cotação de frete. Flask workers=1 + PostgreSQL banco-mana schema `tms` (ADR 2026-05-30) + Railway. Lê agendamentos do Simple Agro, painel kanban por data, rota OSRM por estrada com Ponto de Referência obrigatório, caminhão ideal pelos Perfis de Veículo (bags+tara), cotação por DM WhatsApp via agente-whatsapp. Retorno chega via agente-...",
+      "version": "1.0.0",
+      "author": {
+        "name": "Sementes Mana LTDA"
+      }
+    },
+    {
+      "name": "agente-whatsapp",
+      "source": "./plugins/agente-whatsapp",
+      "description": "Agente de envio de mensagens WhatsApp via Z-API para Sementes Maná LTDA. Serviço Flask no Railway que envia mensagens para números individuais e grupos do WhatsApp sem necessidade de aprovação de template Meta. Conecta via QR Code com número pessoal. Suporta texto livre, templates pré-definidos (crédito aprovado, reprovado, pendência de documentos) e envio em massa. Integrado ao SoftExpert como...",
+      "version": "1.0.0",
+      "author": {
+        "name": "Sementes Mana LTDA"
+      }
+    },
+    {
+      "name": "agente-whatsapp-pa",
+      "source": "./plugins/agente-whatsapp-pa",
+      "description": "Bot WhatsApp de Plano de Ação integrado ao SoftExpert tmc_ws.php para Sementes Maná LTDA. Serviço Flask no Railway que recebe mensagens via agente-whatsapp (Z-API), interpreta com Claude NLP, e executa operações no SE Plano de Ação (criar planos, criar ações, consultar progresso). Suporta dois perfis: Colaborador (cria e consulta suas próprias ações) e Líder (gerencia planos nomeados com lidera...",
+      "version": "1.0.0",
+      "author": {
+        "name": "Sementes Mana LTDA"
+      }
+    },
+    {
+      "name": "auditoria-ponto-mana",
+      "source": "./plugins/auditoria-ponto-mana",
+      "description": "Use esta skill SEMPRE que trabalhar no projeto de Auditoria de Ponto da Sementes Maná (agente-auditoria-ponto). Triggers obrigatórios: \"auditoria de ponto\", \"auditoria_ponto.html\", \"agente-auditoria-ponto\", \"espelho de ponto\", \"inconsistências de ponto\", \"gestores de ponto\", \"relatório de ponto Maná\", \"DIXI ponto\", \"melhorar o HTML de ponto\", \"validações de ponto\", \"banco de horas\", \"BH saldo\",...",
+      "version": "1.0.0",
+      "author": {
+        "name": "Sementes Mana LTDA"
+      }
+    },
+    {
+      "name": "auditoria-ponto-rh",
+      "source": "./plugins/auditoria-ponto-rh",
+      "description": "Gera um aplicativo HTML completo de auditoria de espelho de ponto trabalhista para RH. Use sempre que o usuario pedir para analisar, auditar ou verificar registros de ponto, espelhos de ponto, fechamento de ponto, banco de horas, jornada de trabalho, horas extras, inconsistencias trabalhistas, ou qualquer tarefa relacionada a controle de ponto e conformidade com CLT ou CCT. A skill entrega um u...",
+      "version": "1.0.0",
+      "author": {
+        "name": "Sementes Mana LTDA"
+      }
+    },
+    {
+      "name": "automacao-ubs",
+      "source": "./plugins/automacao-ubs",
+      "description": "Use esta skill SEMPRE que Lorena quiser trabalhar no projeto de Automação e Transformação Digital da UBS (Unidade de Beneficiamento de Sementes) da Sementes Maná. Triggers obrigatórios: qualquer menção a \"UBS\", \"automação UBS\", \"backlog UBS\", \"cards de automação\", \"projeto mestre UBS\", \"beneficiamento de sementes\", \"transformação digital Maná\", \"Protheus UBS\", \"secagem\", \"silos\", \"beneficiament...",
+      "version": "1.0.0",
+      "author": {
+        "name": "Sementes Mana LTDA"
+      }
+    },
+    {
+      "name": "obsidian-manavault",
+      "source": "./plugins/obsidian-manavault",
+      "description": "\"Cérebro estruturado da Sementes Maná em Obsidian. Vault knowledge graph com hiperautomação 3 níveis (N1/N2/N3), 16 agentes em produção, ADRs imutáveis, runbooks e pesquisa genética (34 cultivares de soja). Sync GitHub via Obsidian Git (OAuth/GCM, auto-commit 10min). Use SEMPRE que mexer no ManaVault — adicionar nota, popular variedade, criar ADR, atualizar agente, configurar plugin, CSS cores,...",
+      "version": "1.0.0",
+      "author": {
+        "name": "Sementes Mana LTDA"
+      }
+    },
+    {
+      "name": "portal-gestao-diaria",
+      "source": "./plugins/portal-gestao-diaria",
+      "description": "|",
+      "version": "1.0.0",
+      "author": {
+        "name": "Sementes Mana LTDA"
+      }
+    },
+    {
+      "name": "reunioes-tactiq",
+      "source": "./plugins/reunioes-tactiq",
+      "description": "Acesso às reuniões da Sementes Maná via Tactiq MCP + transcrições completas no Google Drive. Use SEMPRE que o Xayer pedir qualquer coisa sobre uma reunião — \"gera o HTML da reunião\" (termo principal do Xayer), resumo, action items, decisões, \"o que ficou combinado\", cruzar reuniões, transformar reunião em documento/e-mail/plano. Também quando mencionar Tactiq, transcrição, \"html da reunião\", \"r...",
+      "version": "1.0.0",
+      "author": {
+        "name": "Sementes Mana LTDA"
+      }
+    },
+    {
+      "name": "softexpert-orchestrator",
+      "source": "./plugins/softexpert-orchestrator",
+      "description": "Biblioteca Inteligente de Orquestração SoftExpert para Skills. Core library para integração segura com SoftExpert Workflow — fornece client SOAP robusto, WorkflowBuilder de alto nível, validação automática, retry com backoff, error classification (4 tipos), audit logging completo e fallback inteligente. Use esta skill como dependência para qualquer skill que precisa integrar com SoftExpert (CPR...",
       "version": "1.0.0",
       "author": {
         "name": "Sementes Mana LTDA"

@@ -1,0 +1,5 @@
+{
+  "name": "agente-tms",
+  "description": "Agente TMS Maná (Sementes Maná) — planejamento de entregas + cotação de frete. Flask workers=1 + PostgreSQL banco-mana schema `tms` (ADR 2026-05-30) + Railway. Lê agendamentos do Simple Agro, painel kanban por data, rota OSRM por estrada com Ponto de Referência obrigatório, caminhão ideal pelos Perfis de Veículo (bags+tara), cotação por DM WhatsApp via agente-whatsapp. Retorno chega via agente-...",
+  "version": "1.0.0"
+}

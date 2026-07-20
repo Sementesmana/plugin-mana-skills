@@ -1,0 +1,5 @@
+{
+  "name": "agente-agronomo",
+  "description": "Bot WhatsApp agronomo especialista em soja da Sementes Mana LTDA. Flask + Railway que recebe relay do agente-router em grupos de agronomia, interpreta com Claude (claude-opus-4-6 via mana-llm-gateway) e responde com consultoria tecnica do portfolio Mana (20 cultivares de 4 obtentoras parceiras Neogen/SoyTech/Genetica Soy/Stine). Recomendacao assertiva de 1 variedade, posicionamento por microrre...",
+  "version": "1.0.0"
+}

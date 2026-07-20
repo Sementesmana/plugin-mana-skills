@@ -1,0 +1,5 @@
+{
+  "name": "agente-km",
+  "description": "PWA mobile de registro de visitas com GPS, foto e cálculo de km para Sementes Maná LTDA. Flask + Railway que captura coordenadas no celular, calcula distância Haversine até o ponto-base, grava latcampo/lngcampo/kmrodados no SoftExpert e anexa a foto com overlay GPS (cidade, lat/lng, data/hora). Use este skill SEMPRE que precisar trabalhar com o agente-km — corrigir bugs do PWA mobile, ajustar o...",
+  "version": "1.0.0"
+}

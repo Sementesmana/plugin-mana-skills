@@ -1,0 +1,5 @@
+{
+  "name": "agente-precificacao",
+  "description": "Agente de precificação e orçamento de sementes — Sementes Maná LTDA. Flask+Railway+PostgreSQL (schema precificacao). Catálogo de cultivares por safra com preços mensais por tier (ALTO/MEDIO/BAIXO), desmontagem Royalties+Germoplasma, frete OSRM, TSI, orçamentos com aprovação, painel JWT. Use SEMPRE que precisar trabalhar com agente-precificacao — painel HTML, endpoints, preços, desmontagem, fret...",
+  "version": "1.0.0"
+}

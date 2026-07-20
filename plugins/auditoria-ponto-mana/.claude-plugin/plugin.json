@@ -1,0 +1,5 @@
+{
+  "name": "auditoria-ponto-mana",
+  "description": "Use esta skill SEMPRE que trabalhar no projeto de Auditoria de Ponto da Sementes Maná (agente-auditoria-ponto). Triggers obrigatórios: \"auditoria de ponto\", \"auditoria_ponto.html\", \"agente-auditoria-ponto\", \"espelho de ponto\", \"inconsistências de ponto\", \"gestores de ponto\", \"relatório de ponto Maná\", \"DIXI ponto\", \"melhorar o HTML de ponto\", \"validações de ponto\", \"banco de horas\", \"BH saldo\",...",
+  "version": "1.0.0"
+}

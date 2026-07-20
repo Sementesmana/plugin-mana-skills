@@ -1,0 +1,5 @@
+{
+  "name": "agente-whatsapp-pa",
+  "description": "Bot WhatsApp de Plano de Ação integrado ao SoftExpert tmc_ws.php para Sementes Maná LTDA. Serviço Flask no Railway que recebe mensagens via agente-whatsapp (Z-API), interpreta com Claude NLP, e executa operações no SE Plano de Ação (criar planos, criar ações, consultar progresso). Suporta dois perfis: Colaborador (cria e consulta suas próprias ações) e Líder (gerencia planos nomeados com lidera...",
+  "version": "1.0.0"
+}

@@ -1,0 +1,5 @@
+{
+  "name": "obsidian-manavault",
+  "description": "\"Cérebro estruturado da Sementes Maná em Obsidian. Vault knowledge graph com hiperautomação 3 níveis (N1/N2/N3), 16 agentes em produção, ADRs imutáveis, runbooks e pesquisa genética (34 cultivares de soja). Sync GitHub via Obsidian Git (OAuth/GCM, auto-commit 10min). Use SEMPRE que mexer no ManaVault — adicionar nota, popular variedade, criar ADR, atualizar agente, configurar plugin, CSS cores,...",
+  "version": "1.0.0"
+}

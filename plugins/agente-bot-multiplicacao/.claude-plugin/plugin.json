@@ -1,0 +1,5 @@
+{
+  "name": "agente-bot-multiplicacao",
+  "description": "Bot WhatsApp da Sementes Maná LTDA para pedidos do Simple Agro com Uso da Semente = MULTIPLICAÇÃO. Flask + APScheduler no Railway, cron 08/12/16 BRT, deduplica por pedido e status, envia alertas NOVO e MUDANCA_STATUS via agente-whatsapp ao grupo Trigger pedidos e responde consultas via agente-router e Claude NLP. Use SEMPRE que precisar trabalhar com o agente-bot-multiplicacao — modificar cron,...",
+  "version": "1.0.0"
+}

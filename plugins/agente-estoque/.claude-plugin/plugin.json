@@ -1,0 +1,5 @@
+{
+  "name": "agente-estoque",
+  "description": "Painel de controle de estoque de sementes por cultivar + módulo TSI (Tratamento Industrial de Sementes) para Sementes Maná LTDA. Serviço Flask no Railway com PostgreSQL que cruza estoque manual com pedidos do Simple Agro em tempo real. Inclui módulo TSI com cadastro de produtos químicos, receitas (tratamentos), composição produto×dose, consolidado vivo cruzando pedidos SA × receitas, drill-down...",
+  "version": "1.0.0"
+}
