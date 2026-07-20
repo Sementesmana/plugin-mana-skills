@@ -259,3 +259,6 @@ Job agendado (APScheduler) usando o SDK `mana-simpleagro` para ler os pedidos e 
 - **`mana-arquitetura-padrao`** — governança (aplicável se um dia entrar LLM/WhatsApp).
 - **`agente-estoque`** — referência de UI/lógica (tabela, drilldown, `STATUS_INCLUIDOS`, `nome_norm`) a re-implementar, não copiar.
 - **Não se aplica:** `se-dataset-reader`, `softexpert-dataset-integration`, `softexpert-wf-ws` (fonte é o Simple Agro, não o SoftExpert).
+
+> **Última atualização 2026-07-20 (Dayan — teste sync marketplace):**
+> verificando propagação automática do plugin no Cowork do Xayer.
