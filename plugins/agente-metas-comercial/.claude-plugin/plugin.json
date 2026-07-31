@@ -1,0 +1,5 @@
+{
+  "name": "agente-metas-comercial",
+  "description": "CPM Comercial (gestor Alex Matias) — app de gestão de metas por vendedor e cultivar da Sementes Maná LTDA. Substitui planilha manual semanal: realizado automático do Simple Agro (funil-espelho do agente-estoque), metas versionadas com cascateamento (INICIAL/CASCATA/REALOCACAO/AJUSTE), telas painel/consolidado/metas/timeline/config, multi-safra com seletor. Flask+PostgreSQL (schema metas), gunicorn 1 worker gthread 8 threads, deploy Railway. Fase 2 plugável: alimentação SoftExpert CPM via DI014 + SOAP.",
+  "version": "1.0.0"
+}
