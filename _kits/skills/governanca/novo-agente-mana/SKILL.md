@@ -81,13 +81,58 @@ Use o template em `templates/app/` como base. Copie para `/home/claude/<nome-age
 
 Remover módulos não usados. Se não tem WhatsApp, deletar `integrations/whatsapp.py`. Se não tem LLM, deletar `integrations/claude.py`. Menos código = menos superfície de ataque.
 
-### Passo 4 — Entregar ao usuário
+### Passo 4 — Publicar (repo próprio + Railway)
 
-Use `present_files` para entregar um .zip ou os arquivos individuais. Dê instruções de:
-1. Subir no GitHub (`Sementesmana/hiperautomacao-mana/<nome-agente>/`)
-2. Criar projeto no Railway
-3. Configurar variáveis de ambiente
-4. Deploy automático no push
+> ⚠️ **Repo isolado por agente.** O monorepo `hiperautomacao-mana` foi **extinto** no saneamento de 2026-05-02 (ADR `2026-05-02-caminho-A-padrao-migracao`). Cada agente tem seu próprio repo em `Sementesmana/<nome-agente>`, com o código na **raiz** (Root Directory vazio no Railway).
+
+**4.1 Criar o repo + subir o código — 1 comando (GitHub CLI)**
+
+Não mande o usuário criar no browser e colar arquivo por arquivo. Com `gh` autenticado (setup em `onboarding-dono-agente`, Fase 2.1b) é um comando só:
+
+> 🔒 **Repos Maná são PRIVADOS por padrão** (ADR `2026-08-03-repos-privados-por-padrao`). Público só como exceção consciente, com justificativa na nota do agente. O motivo antigo de ser público (Cowork puxar o SKILL.md do repo) acabou quando o marketplace `plugin-mana-skills` entrou no ar.
+
+**Antes do primeiro commit — confira o `.gitignore`.** O que entra no histórico do git fica lá pra sempre; apagar depois não resolve (precisa reescrever história + rotacionar). Garanta no mínimo:
+
+```gitignore
+.env
+.env.*
+venv/
+__pycache__/
+*.pyc
+.DS_Store
+.vscode/
+.idea/
+*.log
+```
+
+**NUNCA no repo** (nem privado): credenciais, tokens, senhas, connection strings com senha, PDFs/documentos de cliente, dumps com CPF/CNPJ. Segredo vive em env var no Railway.
+
+```bash
+cd ~/Desktop/ORQUESTRADOR/<nome-agente>
+git init && git add -A && git commit -m "feat: scaffold inicial do <nome-agente>"
+gh repo create Sementesmana/<nome-agente> \
+  --private --source=. --remote=origin --push
+```
+
+Cria o repo na Org, configura o `origin` e empurra — tudo de uma vez.
+
+**Pré-requisitos** (se falhar, é um destes):
+- `gh auth status` precisa mostrar "Logged in" → senão `gh auth login --scopes "repo,read:org"`
+- O usuário precisa de permissão de criação de repo na Org → Xayer libera em `https://github.com/organizations/Sementesmana/settings/member_privileges` (seção Repository creation → **Private**)
+- Repo privado exige convite pra cada dono acessar (`Settings → Collaborators → Add people → Write`)
+
+**4.2 Railway**
+
+1. **New Project** → **Deploy from GitHub repo** → seleciona `<nome-agente>` (Nixpacks lê `Procfile`/`requirements.txt`)
+2. Aba **Variables** → adiciona as env vars do agente
+3. Aba **Settings → Networking** → **Generate Domain** (URL pública)
+4. Ao salvar as variáveis o Railway redeploya sozinho (~2min)
+5. Confirmar `Auto deploys when pushed to GitHub` ativo — daí em diante `git push` = deploy
+
+**4.3 Fechar o trio {repo + nota + skill}**
+
+- Nota do agente em `ManaVault/06-Agentes-e-Skills/<nome-agente>.md` (template `_Templates/nota-agente.md`)
+- Skill do agente publicada no marketplace `plugin-mana-skills` (pasta `plugins/<nome-agente>/` + entrada no `.claude-plugin/marketplace.json`) — é o que dá aos outros donos o contexto do agente sem copiar nada na mão
 
 ## Estrutura gerada
 
