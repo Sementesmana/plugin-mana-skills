@@ -1,0 +1,5 @@
+{
+  "name": "agente-bartermanager",
+  "description": "Barter Manager — gestão de operações de barter (permuta insumo × grão) da Sementes Maná: parceiros, contratos de compra/venda, pedidos, cotações barter, acompanhamento de lavoura (CPRs, visitas) e expedição. Flask + SQLAlchemy no schema barter do banco-mana, 40 tabelas em 7 domínios, 224 rotas, 79 testes. App trazido de infra externa em 2026-08-03 e migrado de Node/Express para Flask via strangler pattern. Handoff variação C para Pablo Santana.",
+  "version": "1.0.0"
+}

@@ -34,6 +34,15 @@
       }
     },
     {
+      "name": "agente-bartermanager",
+      "source": "./plugins/agente-bartermanager",
+      "description": "Barter Manager — gestão de operações de barter (permuta insumo × grão) da Sementes Maná: parceiros, contratos de compra/venda, pedidos, cotações barter, acompanhamento de lavoura (CPRs, visitas) e expedição. Flask + SQLAlchemy no schema barter do banco-mana, 40 tabelas em 7 domínios, 224 rotas, 79 testes. Trazido de infra externa em 2026-08-03 e migrado de Node/Express para Flask via strangler pattern.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Sementes Mana LTDA"
+      }
+    },
+    {
       "name": "agente-bot-multiplicacao",
       "source": "./plugins/agente-bot-multiplicacao",
       "description": "Bot WhatsApp da Sementes Maná LTDA para pedidos do Simple Agro com Uso da Semente = MULTIPLICAÇÃO. Flask + APScheduler no Railway, cron 08/12/16 BRT, deduplica por pedido e status, envia alertas NOVO e MUDANCA_STATUS via agente-whatsapp ao grupo Trigger pedidos e responde consultas via agente-router e Claude NLP. Use SEMPRE que precisar trabalhar com o agente-bot-multiplicacao — modificar cron,...",
