@@ -1,0 +1,5 @@
+{
+  "name": "agente-financeiro-gestao",
+  "description": "Gestão financeira diária da Sementes Maná — contas a pagar/receber, fluxo de caixa, orçamento, projeção e aging. Substitui o Gerencial_Financeiro.html (arquivo único, dados no localStorage) por Flask+PostgreSQL (schema financeiro) no Railway, preservando as 168 funções do painel do financeiro via porte gerado (ferramentas/portar_painel.py). Núcleo: carga vigente (reimportar não duplica), anotações compartilhadas com autor/histórico (justificativas, responsáveis, saldos de banco), gráfico de fluxo de caixa com escala comprimida e ponto de ruptura, embed no SoftExpert com token consulta. Futuro: poller do Protheus grava nas mesmas tabelas.",
+  "version": "1.0.0"
+}

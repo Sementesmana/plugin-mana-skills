@@ -97,6 +97,15 @@
       }
     },
     {
+      "name": "agente-financeiro-gestao",
+      "source": "./plugins/agente-financeiro-gestao",
+      "description": "Gestão financeira diária da Sementes Maná — contas a pagar/receber, fluxo de caixa, orçamento, projeção e aging. Substitui o Gerencial_Financeiro.html (arquivo único, localStorage) por Flask+PostgreSQL (schema financeiro) no Railway, com o painel do financeiro portado FIEL (168 funções intactas via porte gerado). Núcleo: carga vigente (reimportar não duplica), anotações compartilhadas com autor/histórico, gráfico de fluxo de caixa com escala comprimida e ponto de ruptura, embed no SoftExpert com token consulta. Futuro: poller do Protheus nas mesmas tabelas.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Sementes Mana LTDA"
+      }
+    },
+    {
       "name": "agente-financeiro-sa",
       "source": "./plugins/agente-financeiro-sa",
       "description": "Visão financeira e comercial dos pedidos Simple Agro — Sementes Maná LTDA (\"Painel Comercial SA\"). Flask no Railway, cache 20 min, 6 abas: Recebimentos/Mês, Por Pedido, Evolução, Clientes (LTV), Por Produto e Por Vendedor. A aba Por Vendedor traz ranking por receita com drill-down duplo (Vendedor→Cliente→Pedido e Vendedor→Cultivar) e filtros em cascata client-side (Vendedor, Cliente, Status, Us...",
