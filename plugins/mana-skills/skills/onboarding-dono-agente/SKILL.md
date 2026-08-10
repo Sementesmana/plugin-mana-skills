@@ -59,7 +59,11 @@ Preciso de acesso pra assumir o <agente>:
 1. **Qual agente?** 2. **Username GitHub REAL** (confirmar por print — erro dá acesso
 a repo privado pra pessoa errada)? 3. **Email Railway?** 4. **Push direto ou PR?**
 5. **Perfil: dev ou não-dev?** 6. **Background?** 7. **Data de início** (revisão +4
-semanas). 8. **Máquina nova ou dono veterano?** — veterano pula quase toda a Fase 2.
+semanas). 8. **Máquina nova ou dono veterano?** — cuidado: veterano é SÓ quem passou
+pelo pipeline ATUAL (marketplace instalado + gh autenticado + autocrlf).
+Dono de **geração anterior** (pré-marketplace, memory modular manual) →
+tratar como MÁQUINA NOVA: Fase 2 completa vira auditoria do setup, com
+backup .bak do que existia (lição do repasse Lorena/financeiro, 2026-08-09).
 
 ## As 4 variações de handoff
 
@@ -171,7 +175,10 @@ nos dois. O GitHub bloqueia push com chave/token reconhecido.
 9. ⚠️ **Máquina já usada por outra função:** backup `.bak` de CLAUDE.md/memory
    antigos antes do setup novo.
 
-### Fase 2-V — Dono VETERANO recebendo agente adicional (~5min)
+### Fase 2-V — Dono VETERANO ATUAL recebendo agente adicional (~5min)
+
+> ⚠️ SÓ para veterano do pipeline ATUAL (pré-decisão 8). Geração anterior →
+> Fase 2 completa como auditoria, com backup .bak.
 
 Máquina já configurada (git, gh, Cowork, vault clonado)? A Fase 2 vira só:
 
@@ -264,7 +271,7 @@ perigoso, gitignore dia 1, create_all, carga em lote.
   `09-Runbooks/criar-agente-novo-handoff-multi-maquina.md`
 
 ---
-*v3.0.0 — 2026-08-09. Consolida as duas linhas que divergiram (v2 de
+*v3.1.0 — 2026-08-09 (tarde): define VETERANO = pipeline atual; geração pré-marketplace roda Fase 2 completa como auditoria (lição do 1º uso real, repasse Lorena/financeiro). v3.0.0 — 2026-08-09: Consolida as duas linhas que divergiram (v2 de
 2026-07-03: 4 variações + Fase 3 rápida; ajustes Pablo de 2026-08-03: Member
 vs Collaborator + repos privados + gh CLI) e adiciona: POP imprimível,
 caminho VETERANO (Fase 2-V), autocrlf na Fase 2, memória viva v1.3 na Fase 3,
