@@ -123,9 +123,19 @@ Escolha `advisory_lock_id` único por agente (ex: hash do nome → int). Documen
   Leitura **204ms** vs live **~2s** (10x). Painel 100% no banco-mana.
 - `agente-comercio-revendas` (2026-07-03) — 1º consumidor real da habilidade.
 - `agente-documentos` (2026-07-05) — 9 docs LAKE HIT em 0,4s; análise 108,9s → 57,8s.
-- `agente-financeiro-sa` (ADR 2026-08-13, **em deploy**) — o lake como **piso de
+- `agente-financeiro-sa` (ADR 2026-08-13) — o lake como **piso de
   disponibilidade**, não só de latência: Simple Agro fora do ar passa a servir o
-  último snapshot bom em vez de tela vazia.
+  último snapshot bom em vez de tela vazia. Snapshot de 356 pedidos em produção.
+
+> ⚠️ **Ao instalar: não pine `psycopg2-binary`.** A habilidade declara
+> `psycopg2-binary>=2.9.10`. Um `==2.9.9` no `requirements.txt` do consumidor dá
+> `ResolutionImpossible` no build. Use `>=2.9.10` ou simplesmente não declare —
+> a habilidade resolve.
+
+> 💡 **Para chamar o endpoint de ingestão sem expor a senha:** a env var já
+> existe dentro do container. Pelo Console do Railway,
+> `curl -X POST -H "X-API-Key: $PAINEL_SENHA" http://localhost:$PORT/api/atualizar-data-lake`.
+> Ninguém revela, copia ou cola o segredo.
 
 ## O uso que quase ninguém pensa primeiro: disponibilidade
 
