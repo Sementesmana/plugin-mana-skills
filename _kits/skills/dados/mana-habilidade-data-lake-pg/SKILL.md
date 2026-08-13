@@ -121,6 +121,47 @@ Escolha `advisory_lock_id` único por agente (ex: hash do nome → int). Documen
 
 - `agente-pedidos` (ADR 2026-06-30) — 4 fontes do `/painel-reais` no lake.
   Leitura **204ms** vs live **~2s** (10x). Painel 100% no banco-mana.
+- `agente-comercio-revendas` (2026-07-03) — 1º consumidor real da habilidade.
+- `agente-documentos` (2026-07-05) — 9 docs LAKE HIT em 0,4s; análise 108,9s → 57,8s.
+- `agente-financeiro-sa` (ADR 2026-08-13, **em deploy**) — o lake como **piso de
+  disponibilidade**, não só de latência: Simple Agro fora do ar passa a servir o
+  último snapshot bom em vez de tela vazia.
+
+## O uso que quase ninguém pensa primeiro: disponibilidade
+
+A leitura óbvia da habilidade é velocidade — esconder fonte lenta. O
+`agente-financeiro-sa` expôs a outra: **o lake é o que sobra quando a fonte cai.**
+
+O painel dele mostrava "Nenhum pedido encontrado." sempre que o Simple Agro
+falhava, porque o cliente devolvia `[]` em qualquer erro de HTTP e esse `[]`
+era gravado no cache. Quem lê `[]` não consegue distinguir "não há pedidos" de
+"a fonte recusou". Duas correções, nesta ordem — a segunda não funciona sem a
+primeira:
+
+1. **Falha ganha tipo próprio.** Uma exceção (`SAIndisponivel`), não lista vazia.
+2. **O lake vira o piso.** Ordem de leitura
+   `memória → arquivo → lake → fonte ao vivo`; se a fonte cair, cai para o lake
+   de **qualquer idade**, e só levanta erro quando não existe snapshot nenhum.
+
+```python
+try:
+    dados = buscar_na_fonte()          # levanta se a fonte recusar
+except FonteIndisponivel:
+    velho, quando = lake.read(chave)   # TUPLA
+    if velho:
+        return velho, "lake:vencido", idade(quando)   # com aviso na tela
+    raise                                             # erro explícito, nunca tela vazia
+lake.upsert(chave, dados)
+```
+
+> ⚠️ **`upsert()` aceita payload vazio.** A habilidade não julga o conteúdo — de
+> propósito, porque `[]` é legítimo em muitos domínios. **A guarda mora no
+> consumidor.** Sem ela você troca "tela vazia por 20 minutos" por "tela vazia
+> até alguém reparar", que é estritamente pior. Vale o mesmo para o caminho de
+> erro: **nunca deixe uma falha escrever no lake.**
+
+E quando servir dado velho, **diga na tela que é velho**. Número de ontem com
+cara de número de agora é pior que a tela vazia que você acabou de consertar.
 
 ## Gotchas
 
