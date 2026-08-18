@@ -153,8 +153,8 @@
     {
       "name": "agente-governanca",
       "source": "./plugins/agente-governanca",
-      "description": "Plataforma de Governança por Processo da Sementes Maná — app Flask+PG (schema governanca)+Railway onde as áreas constroem a governança de cada processo em wizard guiado (SIPOC Bloco A, tartaruga Bloco B, zoom por atividade Bloco C), com IC×IV Falconi, riscos↔controles N:N, requisitos auditáveis, versionamento AS IS→TO BE e geração de .bpmn no dialeto SoftExpert (lane por geometria, sem flowNodeRef/conditionExpression). Use SEMPRE que trabalhar no agente-governanca — wizard, tartaruga, SIPOC, BPMN export, cockpit...",
-      "version": "1.0.0",
+      "description": "Plataforma de Governança por Processo da Sementes Maná — app Flask+PG (schema governanca)+Railway onde as áreas constroem a governança de cada processo em wizard guiado (SIPOC Bloco A, tartaruga Bloco B, zoom por atividade Bloco C), com IC×IV Falconi, riscos↔controles N:N, requisitos auditáveis, versionamento AS IS→TO BE e geração de .bpmn no dialeto SoftExpert. Inclui o módulo de PLANEJAMENTO ESTRATÉGICO (Maná-Estratégia, método Antônio Napoli em 10 etapas, 23 tabelas pe_*, coleta individual antes da reunião...",
+      "version": "1.1.0",
       "author": {
         "name": "Sementes Mana LTDA"
       }

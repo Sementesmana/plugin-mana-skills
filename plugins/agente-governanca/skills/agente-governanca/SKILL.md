@@ -1,6 +1,6 @@
 ---
 name: agente-governanca
-description: Plataforma de Governança por Processo da Sementes Maná — app Flask+PG (schema governanca)+Railway onde as áreas constroem a governança de cada processo em wizard guiado (SIPOC Bloco A, tartaruga Bloco B, zoom por atividade Bloco C), com IC×IV Falconi, riscos↔controles N:N, requisitos auditáveis, versionamento AS IS→TO BE e geração de .bpmn no dialeto SoftExpert (lane por geometria, sem flowNodeRef/conditionExpression). Use SEMPRE que trabalhar no agente-governanca — wizard, tartaruga, SIPOC, BPMN export, cockpit, state machine, organograma D-G-S-A, capacitação embutida, copiloto gateway. Também quando mencionar: Maná Mapeia, plataforma de governança, mapeamento de processo, diagrama de tartaruga, item de controle, item de verificação, requisito auditável, dialeto BPMN SE, funil de automação, inventário de processos.
+description: Plataforma de Governança por Processo da Sementes Maná — app Flask+PG (schema governanca)+Railway onde as áreas constroem a governança de cada processo em wizard guiado (SIPOC Bloco A, tartaruga Bloco B, zoom por atividade Bloco C), com IC×IV Falconi, riscos↔controles N:N, requisitos auditáveis, versionamento AS IS→TO BE e geração de .bpmn no dialeto SoftExpert. Inclui o módulo de PLANEJAMENTO ESTRATÉGICO (Maná-Estratégia, método Antônio Napoli em 10 etapas, 23 tabelas pe_*, coleta individual antes da reunião, acesso FECHADO por padrão via colaboradores.acesso_pe lido do banco a cada request), importador Bizagi/BPMN, organograma gráfico, agenda por departamento com .ics no Outlook e construtor de documentos. Use SEMPRE no agente-governanca — wizard, tartaruga, SIPOC, BPMN, cockpit, organograma D-G-S-A, módulo estratégico, agenda, copiloto. Também quando mencionar: Maná Mapeia, Maná-Estratégia, diagrama de tartaruga, requisito auditável, dialeto BPMN SE, funil de automação, pe_ciclos, acesso_pe, método Napoli.
 ---
 
 # agente-governanca — Plataforma de Governança por Processo
@@ -219,6 +219,67 @@ tabela legada mantida só pra colaboradores.cargo_id até a etapa Colaborador).
   (strip iterativo de "# " + numeração — não voltar pro sub único, "# 1. X" quebrava).
   tipo vira 'modelo_proprio' (está em TIPOS, fora de LAYOUTS — o chooser exclui).
   Dependência: python-docx==1.1.2 no requirements.
+
+## Módulo Planejamento Estratégico — Maná-Estratégia (2026-08-11→18)
+
+Segundo módulo do app, ao lado do mapeamento de processo. **Método Antônio Napoli**
+(sócio-fundador da Catálises, consultor que desenhou o plano estratégico do G4), destilado
+da entrevista no Papo de Gestão em **10 etapas** — a lógica vive em `app/consultor.py`
+("Maná-Estratégia — consultor sênior"), cada etapa com a citação-âncora do Napoli.
+
+**Princípios do método que NÃO se pode diluir** (estão no consultor e valem como regra):
+- *Alinhamento não é consenso* — não precisa todo mundo querer a mesma coisa.
+- *A pergunta que abre a estratégia é "a quem você serve"* — sem ela, o resto é ruído.
+- *Amplitude de mercado e geografia vêm antes de qualquer análise.*
+- *Peer group é deliberado* — peer escolhido pra se sentir bem é autoengano.
+- *Olhar primeiro cliente/mercado/competidor; só depois a casa.*
+- *Horizonte é por setor* — é o tempo que uma decisão leva pra virar resultado.
+- *Quase ninguém pergunta o que NÃO vai mudar* (invariantes).
+- *Tático se refaz todo ano; estratégia só muda em evento catastrófico.*
+- *Ordem de execução: estrutura → cultura → sistema de gestão → sistema de incentivo.*
+
+**Dado (23 tabelas `pe_*` no mesmo schema `governanca`):** `pe_ciclos`, `pe_desejos`,
+`pe_alinhamento`, `pe_objetivos`, `pe_iniciativas`, `pe_indicadores`, `pe_cards`,
+`pe_card_metas`, `pe_ritos`, `pe_pacing`, `pe_socios`, `pe_clientes`, `pe_arena`,
+`pe_peers`, `pe_diagnostico`, `pe_ambicao`, `pe_condicoes`, `pe_invariantes`,
+`pe_escolhas`, `pe_desdobramento`, `pe_entrevista_msgs`, `pe_participantes`,
+`pe_coleta_feita`.
+
+**Rotas** (`app/routes_pe.py`): `/pe` (lista de ciclos) · `/pe/novo` · `/pe/<cid>` ·
+`/pe/<cid>/minha` (**coleta individual opcional antes da reunião**) · API
+`PATCH /api/pe/<cid>/ciclo` · `POST /api/pe/<cid>/unico/<tabela>` (registro único) ·
+CRUD genérico `POST|PATCH|DELETE /api/pe/<cid>/<tabela>[/<iid>]` · `/api/pe/<cid>/metas` ·
+`/api/pe/<cid>/participantes[/<pid>]`. Telas: `pe.html`, `pe_lista.html`,
+`pe_entrevista.html`.
+
+**Ditado por voz em todo campo de resposta do wizard** (mesma linha da decisão 17).
+
+### ⚠️ Acesso ao módulo estratégico — fechado por padrão
+
+`app/auth.py` → `pode_pe()` / `@exige_pe()`. **`colaboradores.acesso_pe` default FALSE**:
+quem entra para mapear processo **não vê** o módulo estratégico. A permissão é lida **do
+banco a cada requisição, nunca do token** — de propósito: liberar ou cortar acesso tem
+efeito imediato, sem esperar o JWT expirar. Cache só dentro do request (`g._pode_pe`).
+
+**Não migrar essa checagem para o token** "por performance" — o custo de uma query por
+request é o preço de conseguir revogar acesso a conteúdo estratégico na hora.
+
+## Outros módulos entregues (2026-08-10→18)
+
+- **Importador Bizagi/BPMN** (`app/bizagi_import.py`, `/importar`, `importar_previa.html`):
+  traz fluxo, papéis e decisões já criados; paleta BPMN 2.0 completa + inventário de
+  artefatos; **raia soma origem do pool** e **gateway paralelo não vira decisão**; decisão
+  com dois caminhos declara destino de cada ramo, marcador de "caminho a definir" e rótulo
+  no meio da seta.
+- **Organograma gráfico** (`app/org_chart.py`, `/org`, `org_grafico.html`): áreas clicáveis
+  → estrutura da área, recolher/expandir ramos, nome inteiro, zoom/tela cheia, **uma
+  empresa por tela**, hierarquia entre áreas em N níveis, ditado por voz.
+- **Agenda por departamento + Outlook** (`app/agenda_ics.py`, `/agenda`): "minha agenda"
+  consolidada e **assinatura .ics** (decisão 21).
+- **Login no iframe do SE**: cookie `SameSite=None; Secure`, aviso de bloqueio e **`sub` do
+  JWT como string** (embed do painel dentro do SoftExpert).
+- **Performance**: gunicorn timeout 120s, **28 índices**, gzip, cache de estáticos, render
+  não-bloqueante e cronômetro por rota.
 
 ## Roadmap restante (blueprint)
 F5: cargas SE (GRC/CPM/ECM/Competências via MCP/SOAP) + instanciar workflow.
