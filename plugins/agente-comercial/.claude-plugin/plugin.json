@@ -1,0 +1,5 @@
+{
+  "name": "agente-comercial",
+  "description": "Bot WhatsApp dual-mode da Sementes Maná LTDA (N1, produção) — porta de entrada comercial no WhatsApp. Flask no Railway, sem banco próprio além do cadastro de usuários no banco-mana. Modo COMERCIAL - consulta preço, catálogo, frete e filtros no agente-precificacao por tools determinísticas + Claude rápido; modo AGRÔNOMO - consultoria de soja sobre knowledge_base_agronomo.md com estratificação de modelos (classificação rápida, recomendação equilibrada, dúvida técnica no modelo forte). Recebe payload raw Z-API do...",
+  "version": "1.0.0"
+}

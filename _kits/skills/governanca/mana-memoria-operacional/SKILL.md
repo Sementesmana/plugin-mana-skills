@@ -11,8 +11,10 @@ description: >-
   com: git pull/push falhando, arquivo que "não salva", SyntaxError fantasma,
   sync pendurado, deploy que não sobe, Railway, banco-mana remoto. Se a
   conversa é "por que isso não funciona na minha máquina?" — use esta skill.
-  v1.1: além da memória, GERA o CLAUDE.md do repo do agente (contrato de
-  trabalho que viaja no Git) — peça "semeia a memória e configura o repo".
+  v1.1: GERA também o CLAUDE.md do repo do agente — peça "semeia a memória e
+  configura o repo". v1.4: regras de dados (falha nunca vira dado, payload com
+  fonte e idade), 452 single-session do SA, conferir por conjunto e não por
+  contagem, Cowork remoto pela bridge (touch antes do git add).
 ---
 
 # Memória Operacional Maná — kit do dono de agente
@@ -92,6 +94,13 @@ no MEMORY.md pra cada um). Conteúdo de cada seed nas seções 2–6.
 | `reference_deploy_railway_mana.md` | Deploy = git push (nunca railway up); env vars; validar por /health + log |
 | `reference_padroes_codigo_validados.md` | Pool keepalives; guard com validade; finally+rollback; dedup por requisição |
 | `feedback_fluxo_trabalho_mana.md` | Validar antes do push; 1 comando por vez pro humano; reportar no final |
+| `reference_dados_falha_nao_vira_dado.md` | Falha levanta exceção; vazio de erro não persiste; payload diz de quando é; timestamp com offset |
+| `reference_sa_single_session_452.md` | SA é single-session: 452 = outro login entrou; usuário dedicado; cura = data lake |
+| `feedback_verificacao_por_conjunto.md` | Conferir por diff de conjuntos, nunca por contagem; reportar órfãos E links quebrados |
+| `reference_cowork_remoto_bridge.md` | Sessão na nuvem: gravar por commit_files, ler por list_dir, `touch` antes do `git add` |
+
+> Conteúdo dos 5 primeiros nas seções 2–6; dos 4 novos, nas seções 8–10 e em
+> `memorias/` (um arquivo por aprendizado, com o índice em `memorias/_INDICE.md`).
 
 ## 2. Git e GitHub (o sandbox NÃO autentica)
 
@@ -210,6 +219,73 @@ habilidade canônica: avisar o hub.
 com SE/SA pelo código (env vars), não pelo chat. Instale MCP só quando a tarefa
 pedir (e provavelmente o que a tarefa pede é skill/habilidade do cockpit).
 
+## 8. Dados: falha nunca vira dado (regra que custou um painel branco)
+
+Quatro regras que andam juntas — detalhe e história em
+[`memorias/falha-nao-vira-dado.md`](memorias/falha-nao-vira-dado.md):
+
+1. **Erro de transporte levanta exceção.** `return []` no caminho de falha é
+   proibido — lista vazia significa uma coisa só: **não há registro**.
+2. **Vazio de erro não é persistido; falha não sobrescreve snapshot bom.** Vazio
+   só entra no lake quando a origem confirmou sucesso (safra nova com zero
+   pedidos é verdade gravável — a proibição é no caminho de erro).
+3. **Todo payload diz de quando é** (`fonte` + idade) e a tela avisa quando o
+   dado está velho. Dado antigo com aviso é útil; sem aviso é mentira.
+4. **Timestamp que cruza processo carrega o offset.** ISO sem fuso é ambíguo.
+
+Corolário: **um valor que significa duas coisas é um bug esperando data.** Dê à
+falha um tipo próprio.
+
+### Origens lentas: leia do lake, não do ERP
+
+- **Simple Agro é single-session** — HTTP **452** quando o mesmo login entra em
+  outro lugar. Credencial **exclusiva da automação** (login humano derruba a
+  integração), 452 tratado como 401 com retry limitado, e a cura estrutural é o
+  data lake ([`memorias/sa-single-session-452.md`](memorias/sa-single-session-452.md)).
+- **Nunca consultar o ERP no caminho da requisição do usuário.** Quem espera a
+  origem é o cron, não a pessoa. Ordem de leitura:
+  `memória → arquivo → lake → origem ao vivo`; origem fora do ar cai para o lake
+  **de qualquer idade** (com o aviso da regra 3).
+- **SoftExpert**: leitura por Conjunto de Dados (`se-dataset-reader`) em vez de
+  `getTableRecord` paginado. Guarda de truncamento: retorno com exatamente
+  10.000 linhas é **possivelmente truncado** — alertar, nunca gravar como completo.
+
+## 9. Conferir por conjunto, nunca por contagem
+
+Soma bate com conjunto errado: um item faltando e um sobrando **se cancelam**.
+Antes de dizer "está tudo lá", compare as duas listas nos dois sentidos —
+órfãos (existe e não está indexado) **e** links quebrados (indexado e não
+existe) — e reporte os dois lados **mesmo vazios**. Receita em
+[`memorias/verificar-por-conjunto.md`](memorias/verificar-por-conjunto.md).
+Vale para migração, índice do vault, import de memória, carga no banco.
+
+## 10. Cowork remoto (sessão na nuvem + bridge do desktop)
+
+Quando a sessão roda na nuvem com a pasta do dev montada pela bridge, os
+fantasmas do mount mudam de nome mas continuam:
+
+- **Gravar no disco do dev = `device_commit_files`**; construir e validar no
+  container (`/tmp`) antes.
+- **Não editar arquivo do mount in-place** (`sed`, `open(...,'w')`, `git checkout`).
+- **Fonte autoritativa do que está no disco = `device_list_dir`** — o bash local
+  lê stale logo depois de gravar.
+- **`touch` antes do `git add`**: a gravação pela bridge mantém o mtime antigo e
+  o git pula o arquivo dizendo *"nothing to commit"*.
+- **O bash da bridge não tem rede e não deleta** — para remover, `mv` para
+  `_to_delete/` ou `git rm` no Git Bash do dev.
+
+Detalhe em [`memorias/cowork-remoto-bridge.md`](memorias/cowork-remoto-bridge.md).
+
+## 11. Nome do repo ≠ nome do plugin ≠ nome do serviço
+
+Antes de concluir que "falta skill/plugin/nota" para um agente, **confira os três
+nomes** — na Maná eles divergem com frequência (repo `agente-gfi` publica como
+`portal-gestao-diaria`; `agente-plano-acao` é o `agente-whatsapp-pa`; `agente-ponto`
+virou `auditoria-ponto-*`; `agente-mapa-pedidos` roda em `mapa-comercial-production`).
+Comparar listas por nome, sem checar o conteúdo, produz gap falso — e o oposto
+também: skill publicada sem repo correspondente é mapa sem território. Ao criar
+artefato novo, **usar o mesmo nome nos três lugares**.
+
 ## Como instalar (dev novo)
 
 1. Cockpit Maná Builder → card **Skills (plugin)** → `mana-memoria-operacional`
@@ -222,8 +298,14 @@ pedir (e provavelmente o que a tarefa pede é skill/habilidade do cockpit).
    nasce com a memória da casa e o repo com o contrato de trabalho.
 
 ---
-*v1.2.0 — 2026-07-03. v1.1 adiciona seção 0 (CLAUDE.md do dono + instruções
-de projeto); v1.2 adiciona seção 7 (tabela repo-vizinho-como-referência +
-regra de conectores). Origem: memória acumulada da máquina-hub (Xayer) +
-incidentes reais (index.lock e truncamento de mount no piloto Dayan 2; sync
-pendurado por socket morto 2026-07-03; vazamento de pool 2026-07-03).*
+*v1.4.0 — 2026-08-18. v1.1 adiciona seção 0 (CLAUDE.md do dono + instruções de
+projeto); v1.2, seção 7 (repo-vizinho-como-referência + conectores); v1.3, o
+diretório `memorias/` (memória viva que propaga pelo marketplace); **v1.4**
+promove para a skill o que estava só na máquina-hub — seção 8 (falha nunca vira
+dado + 452 do SA + ordem de leitura), seção 9 (conferir por conjunto), seção 10
+(Cowork remoto pela bridge), seção 11 (repo ≠ plugin ≠ serviço), 4 seeds novos e
+5 memórias vivas. Origem: incidentes reais — painel branco por `[]` cacheado
+(13/08), apagão 452 do Simple Agro, healthcheck morto por `$PORT` literal
+(agente-governanca, 07/08), truncamento pela bridge (gestor-comercial, 14/07) e
+a conferência que fechou a conta com 1 link quebrado (transplante de memória
+para a org Team, 18/08).*

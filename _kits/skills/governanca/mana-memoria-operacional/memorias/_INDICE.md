@@ -12,6 +12,11 @@
 | [gitignore-desde-o-dia-1.md](gitignore-desde-o-dia-1.md) | repo novo; `.pyc`/`__pycache__` aparecendo no diff; limpar lixo versionado |
 | [create-all-nao-altera-tabela.md](create-all-nao-altera-tabela.md) | coluna nova no model + "column does not exist" em produção; migração sem Alembic |
 | [carga-grande-insert-em-lote.md](carga-grande-insert-em-lote.md) | importação de milhares de linhas; WORKER TIMEOUT no gunicorn |
+| [sa-single-session-452.md](sa-single-session-452.md) | HTTP 452 do Simple Agro em bloco; requests caindo sozinhos em horário comercial; credencial compartilhada entre agentes |
+| [falha-nao-vira-dado.md](falha-nao-vira-dado.md) | painel branco sem aviso; `return []` no caminho de erro; cache guardando vazio; timestamp sem fuso |
+| [cowork-remoto-bridge.md](cowork-remoto-bridge.md) | sessão na nuvem com a pasta pela bridge; arquivo que "não salva"; `git add` dizendo "nothing to commit"; leitura truncada depois de gravar |
+| [verificar-por-conjunto.md](verificar-por-conjunto.md) | "está tudo lá?"; conferir migração/índice/import; a contagem bateu mas algo sumiu |
+| [railway-startcommand-port.md](railway-startcommand-port.md) | deploy sobe mas healthcheck não passa; 502 no Railway; `$PORT` literal no comando |
 
 ## Regras deste diretório
 
