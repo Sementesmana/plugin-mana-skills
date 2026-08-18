@@ -286,6 +286,30 @@ Comparar listas por nome, sem checar o conteúdo, produz gap falso — e o opost
 também: skill publicada sem repo correspondente é mapa sem território. Ao criar
 artefato novo, **usar o mesmo nome nos três lugares**.
 
+## 12. Diff fantasma: nunca commitar uma varredura "suja" em lote
+
+Antes de gerar comandos de commit para vários repos de uma vez, **separe mudança
+real de fim de linha**. No Windows, sem `core.autocrlf`, o disco grava CRLF e o
+HEAD guarda LF: qualquer editor que toque o arquivo cria um diff que parece a
+reescrita inteira. Na varredura do parque (18/08), 20+ repos apareciam sujos e só
+6 tinham trabalho de verdade.
+
+**Detectar (5 segundos):** `insertions == deletions` no `git diff --stat` é
+suspeita; `git diff --ignore-cr-at-eol --stat` vazio é prova — é fantasma, não
+commite.
+
+**Curar na máquina:** `core.autocrlf` — **`true`** no Git Bash do Windows (é o que
+o POP de passagem de bastão manda na Fase 2.4), **`input`** na sessão Cowork
+remota, que é Linux. Uma linha, zero commit, nenhum arquivo reescrito — o Git
+normaliza no `git add` e o `status` limpa sozinho. São duas máquinas e dois
+`.gitconfig`: configurar num não configura o outro, e máquina antiga não herda o
+POP (na hub estava vazio em tudo). **Nunca** use `git checkout -- .` para isso:
+já apagou edição não commitada aqui. Em repo que mais de uma máquina clona, vacine com
+`.gitattributes` contendo `* text=auto`.
+
+Detalhe, comando de varredura do parque inteiro e as duas lições caras em
+[`memorias/git-crlf-fantasma-e-checkout.md`](memorias/git-crlf-fantasma-e-checkout.md).
+
 ## Como instalar (dev novo)
 
 1. Cockpit Maná Builder → card **Skills (plugin)** → `mana-memoria-operacional`
@@ -298,7 +322,10 @@ artefato novo, **usar o mesmo nome nos três lugares**.
    nasce com a memória da casa e o repo com o contrato de trabalho.
 
 ---
-*v1.4.0 — 2026-08-18. v1.1 adiciona seção 0 (CLAUDE.md do dono + instruções de
+*v1.5.0 — 2026-08-18. v1.5 acrescenta a seção 12 (diff fantasma de CRLF: nunca
+commitar varredura suja em lote) e reescreve a memória do CRLF com a cura sem
+checkout (`core.autocrlf input`), depois da varredura dos 61 repos do parque.
+v1.4.0 — 2026-08-18. v1.1 adiciona seção 0 (CLAUDE.md do dono + instruções de
 projeto); v1.2, seção 7 (repo-vizinho-como-referência + conectores); v1.3, o
 diretório `memorias/` (memória viva que propaga pelo marketplace); **v1.4**
 promove para a skill o que estava só na máquina-hub — seção 8 (falha nunca vira
