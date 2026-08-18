@@ -124,18 +124,18 @@
       }
     },
     {
-      "name": "agente-gestor-credito",
-      "source": "./plugins/agente-gestor-credito",
-      "description": "Primeiro agente N3 da Sementes Mana, bot do grupo WhatsApp \"Gestor Comercial Mana\" (id 120363407640929433-group). Flask no Railway: cruza pedidos a prazo do Simple Agro com scred (CRE-001) via SOAP fm_ws.getTableRecord, classifica gaps (SEM_CRE, CRE_DIGITACAO, CRE_NAO_APROVADA, PEDIDO_MAIOR_QUE_APROVADO), reconcilia state machine PG (schema gestor_credito), Claude Haiku gera relatorio e envia v...",
+      "name": "agente-gestor-estoque",
+      "source": "./plugins/agente-gestor-estoque",
+      "description": "Bot WhatsApp N3 da Sementes Maná LTDA que alerta a comercialização de estoque por cultivar. Lê o % de comercialização de cada cultivar do agente-estoque (/api/estoque), classifica em faixas (encalhado/avançado/crítico/ruptura) e alerta o grupo Comercial Estoque e DM via agente-whatsapp; responde inbound por texto e áudio via agente-router. Respostas determinísticas (Harness/zero-LLM): nome de v...",
       "version": "1.0.0",
       "author": {
         "name": "Sementes Mana LTDA"
       }
     },
     {
-      "name": "agente-gestor-estoque",
-      "source": "./plugins/agente-gestor-estoque",
-      "description": "Bot WhatsApp N3 da Sementes Maná LTDA que alerta a comercialização de estoque por cultivar. Lê o % de comercialização de cada cultivar do agente-estoque (/api/estoque), classifica em faixas (encalhado/avançado/crítico/ruptura) e alerta o grupo Comercial Estoque e DM via agente-whatsapp; responde inbound por texto e áudio via agente-router. Respostas determinísticas (Harness/zero-LLM): nome de v...",
+      "name": "agente-governanca",
+      "source": "./plugins/agente-governanca",
+      "description": "Plataforma de Governança por Processo da Sementes Maná — app Flask+PG (schema governanca)+Railway onde as áreas constroem a governança de cada processo em wizard guiado (SIPOC Bloco A, tartaruga Bloco B, zoom por atividade Bloco C), com IC×IV Falconi, riscos↔controles N:N, requisitos auditáveis, versionamento AS IS→TO BE e geração de .bpmn no dialeto SoftExpert (lane por geometria, sem flowNodeRef/conditionExpression). Use SEMPRE que trabalhar no agente-governanca — wizard, tartaruga, SIPOC, BPMN export, cockpit...",
       "version": "1.0.0",
       "author": {
         "name": "Sementes Mana LTDA"
@@ -178,6 +178,15 @@
       }
     },
     {
+      "name": "agente-monitor",
+      "source": "./plugins/agente-monitor",
+      "description": "Torre de controle de runtime + cockpit de governança IA-First da Sementes Maná LTDA. Flask + APScheduler no Railway. Três missões num só serviço — (1) loop health de 19+ agentes a cada 5min com alerta WhatsApp ao grupo TI quando algum cai 2x consecutivas (ALERT_AFTER_FAILURES=2, ALERT_COOLDOWN=30min, HISTORY_MAX=288 = 24h); (2) aba Consumos que lê custo de IA por agente do mana-llm-gateway (LLM_GATEWAY_MASTER_KEY server-side, resolve alias→modelo via /model/info) + custo de infra Railway via /api/railway-usage...",
+      "version": "1.0.0",
+      "author": {
+        "name": "Sementes Mana LTDA"
+      }
+    },
+    {
       "name": "agente-nf",
       "source": "./plugins/agente-nf",
       "description": "\"Agente inteligente para processamento automatizado de Notas Fiscais com 3 camadas de proteção contra reprocessamento. Captura NFs de pasta local ou email (IMAP), extrai dados via OCR+Claude AI, classifica fornecedor/centro-de-custo, instancia workflows no SoftExpert com formulário preenchido e itens detalhados. Gerencia automaticamente pasta de email (move para NF-Processadas), rastreia hashes...",
@@ -199,6 +208,15 @@
       "name": "agente-premiacao",
       "source": "./plugins/agente-premiacao",
       "description": "Bot semanal de premiação I2X da Sementes Maná LTDA. Flask + APScheduler no Railway que lê pedidos do Simple Agro (safra 26/27, grupo soja), aplica 2 campanhas de ranking de consultores e envia 2 mensagens ao grupo de WhatsApp via agente-whatsapp, toda segunda 08h BRT. Use SEMPRE que precisar trabalhar com o agente-premiacao — ajustar regras das campanhas, filtros de venda/status, conversão de e...",
+      "version": "1.0.0",
+      "author": {
+        "name": "Sementes Mana LTDA"
+      }
+    },
+    {
+      "name": "agente-recebimento-pedidos",
+      "source": "./plugins/agente-recebimento-pedidos",
+      "description": "Bot WhatsApp da Sementes Maná que gera relatórios visuais do Painel Comercial SA no DM. Flask + Pillow no Railway, sem IA. Lê o /api/dataset do agente-financeiro-sa (read-only) e tem 2 modos: (5) Recebimentos — infográfico PNG da safra (Visão Geral, por Mês com donut de %, por Período, Foco e Ação); (6) Vendedores — lista ranqueada por receita e, escolhido o número, um PDF paginado drill-down do vendedor (KPIs + por Cliente → por Pedido com status, bags, receita, parcelas, total parc). Envia pela porta única do...",
       "version": "1.0.0",
       "author": {
         "name": "Sementes Mana LTDA"

@@ -1,0 +1,5 @@
+{
+  "name": "agente-recebimento-pedidos",
+  "description": "Bot WhatsApp da Sementes Maná que gera relatórios visuais do Painel Comercial SA no DM. Flask + Pillow no Railway, sem IA. Lê o /api/dataset do agente-financeiro-sa (read-only) e tem 2 modos: (5) Recebimentos — infográfico PNG da safra (Visão Geral, por Mês com donut de %, por Período, Foco e Ação); (6) Vendedores — lista ranqueada por receita e, escolhido o número, um PDF paginado drill-down do vendedor (KPIs + por Cliente → por Pedido com status, bags, receita, parcelas, total parc). Envia pela porta única do...",
+  "version": "1.0.0"
+}
