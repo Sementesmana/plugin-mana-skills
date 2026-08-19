@@ -16,6 +16,7 @@
 | [falha-nao-vira-dado.md](falha-nao-vira-dado.md) | painel branco sem aviso; `return []` no caminho de erro; cache guardando vazio; timestamp sem fuso |
 | [cowork-remoto-bridge.md](cowork-remoto-bridge.md) | sessão na nuvem com a pasta pela bridge; arquivo que "não salva"; `git add` dizendo "nothing to commit"; leitura truncada depois de gravar |
 | [verificar-por-conjunto.md](verificar-por-conjunto.md) | "está tudo lá?"; conferir migração/índice/import; a contagem bateu mas algo sumiu |
+| [descartar-no-escuro.md](descartar-no-escuro.md) | trabalho sumiu sem erro; antes de QUALQUER `git restore .` / `checkout -- .` / `reset --hard` / `clean -fd`; push rejeitado com "fetch first"; committer com e-mail @MAQUINA.LOCAL |
 | [documentacao-a-frente-do-codigo.md](documentacao-a-frente-do-codigo.md) | a nota do vault diz "pronto" e o repo não tem; antes de commitar trabalho represado; varredura periódica do parque; fechamento de tarefa |
 | [railway-startcommand-port.md](railway-startcommand-port.md) | deploy sobe mas healthcheck não passa; 502 no Railway; `$PORT` literal no comando |
 

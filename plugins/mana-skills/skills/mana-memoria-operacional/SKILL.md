@@ -303,7 +303,8 @@ o POP de passagem de bastão manda na Fase 2.4), **`input`** na sessão Cowork
 remota, que é Linux. Uma linha, zero commit, nenhum arquivo reescrito — o Git
 normaliza no `git add` e o `status` limpa sozinho. São duas máquinas e dois
 `.gitconfig`: configurar num não configura o outro, e máquina antiga não herda o
-POP (na hub estava vazio em tudo). **Nunca** use `git checkout -- .` para isso:
+POP (na hub estava vazio em tudo). **Nunca** use `git checkout -- .` nem `git restore .` para isso — descarte com `.`
+apaga trabalho não commitado sem volta (`memorias/descartar-no-escuro.md`):
 já apagou edição não commitada aqui. Em repo que mais de uma máquina clona, vacine com
 `.gitattributes` contendo `* text=auto`.
 
@@ -362,7 +363,11 @@ agora: **regra que não viaja pelo marketplace não é regra, é lembrete pessoa
    nasce com a memória da casa e o repo com o contrato de trabalho.
 
 ---
-*v1.7.0 — 2026-08-19. v1.7 promove pra cá a regra dos três pontos do marketplace
+*v1.8.0 — 2026-08-19. v1.8 acrescenta `memorias/descartar-no-escuro.md`: `git restore .`
+e a familia toda (`checkout -- .`, `reset --hard`, `clean -fd`) apagam trabalho nao
+commitado sem volta — dois casos reais, mais push rejeitado por commitar de dois lugares
+e committer com e-mail inventado.
+v1.7.0 — 2026-08-19. v1.7 promove pra cá a regra dos três pontos do marketplace
 (seção 14) — espelho, versão nos dois JSONs, card do cockpit e a vitrine de 1024
 caracteres. Motivo: a regra existia só na memória local de uma máquina e foi violada
 seis vezes num dia; quem pegou foi o Claude de outra conta.
