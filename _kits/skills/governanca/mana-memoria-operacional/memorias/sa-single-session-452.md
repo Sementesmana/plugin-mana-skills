@@ -31,6 +31,28 @@ procure a origem comum antes de investigar cada um.
    `banco-mana`, e os painéis lendo do lake (`mana-habilidade-data-lake-pg`, lake-first).
    Onze consumidores batendo direto no ERP é o problema; um cron é a solução.
 
+## Achado de campo: o parâmetro importa (agente-tms, Dayan, 12/08)
+
+Nem toda chamada ao mesmo endpoint tem o mesmo risco. No `charge-montage`:
+
+| Consulta | Resultado |
+|---|---|
+| `?carga=<numero>` (filtro por número) | **dispara o 452** |
+| por `safra.id` (igual ao relatório do SA) | **200** |
+
+A correção foi **remover o filtro** e resolver o número sempre pelo cache local. Antes de
+concluir que "o SA bloqueou", teste se **outra forma de perguntar a mesma coisa** passa —
+pode ser o parâmetro, não a sessão.
+
+Complementos validados em produção no mesmo trabalho:
+
+- **Cooldown de 3h após um 452.** Continuar batendo *reativa* o bloqueio e nunca deixa a
+  janela fechar. Depois do 452, sirva do lake e não toque no SA.
+- **Ping de liberação** — um request barato só para checar se voltou, que limpa o cooldown
+  quando responde 200. Evita esperar as 3h inteiras à toa.
+- **Refresh do lake em background** (intervalo configurável, default 60 min, piso de 5)
+  com resposta servida do cache: a tela nunca espera o ERP.
+
 ## Não faça
 
 - Não trate 452 como "sem dados" — **falha não vira dado** (veja `falha-nao-vira-dado.md`).
