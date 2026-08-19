@@ -1,20 +1,20 @@
 ---
 name: mana-memoria-operacional
 description: >-
-  Memória operacional destilada da máquina-hub da Sementes Maná pra qualquer
-  dev do modelo federado (Dayan, Lorena, futuros). Use SEMPRE na PRIMEIRA
-  sessão numa máquina nova de dono de agente — ela semeia a memória do Cowork
-  com os gotchas que custam horas: git não autentica no sandbox, index.lock
-  órfão, mount que trunca arquivo recém-editado, heredoc como escrita
-  confiável, validação em /tmp antes do push, pool Postgres remoto com
-  keepalives, guard de thread com validade. Também use quando o dev travar
-  com: git pull/push falhando, arquivo que "não salva", SyntaxError fantasma,
-  sync pendurado, deploy que não sobe, Railway, banco-mana remoto. Se a
-  conversa é "por que isso não funciona na minha máquina?" — use esta skill.
-  v1.1: GERA também o CLAUDE.md do repo do agente — peça "semeia a memória e
-  configura o repo". v1.4: regras de dados (falha nunca vira dado, payload com
-  fonte e idade), 452 single-session do SA, conferir por conjunto e não por
-  contagem, Cowork remoto pela bridge (touch antes do git add).
+  Memória operacional da máquina-hub da Sementes Maná pra qualquer dev do
+  modelo federado (Dayan, Lorena, Pablo, futuros). Use SEMPRE na PRIMEIRA
+  sessão numa máquina nova de dono de agente — semeia a memória do Cowork com
+  os gotchas que custam horas: git não autentica no sandbox, index.lock órfão,
+  mount que trunca arquivo recém-editado, heredoc como escrita confiável, pool
+  Postgres remoto com keepalives. Também quando o dev travar com: git
+  pull/push falhando, arquivo que "não salva", deploy que não sobe, Railway,
+  banco-mana remoto. Se a conversa é "por que isso não funciona na minha
+  máquina?" — use esta skill. v1.1: GERA o CLAUDE.md do repo — peça "semeia a
+  memória e configura o repo". v1.4: falha nunca vira dado, 452 single-session
+  do SA, conferir por conjunto e não por contagem, Cowork pela bridge. v1.5:
+  diff fantasma de CRLF — nunca commitar varredura suja em lote; cura por
+  core.autocrlf, jamais git checkout. v1.6: fechamento é push, não
+  "funcionou"; documentação à frente do código.
 ---
 
 # Memória Operacional Maná — kit do dono de agente
@@ -339,7 +339,11 @@ Detalhe, tabela dos quatro casos e a varredura periódica em
    nasce com a memória da casa e o repo com o contrato de trabalho.
 
 ---
-*v1.6.0 — 2026-08-19. v1.6 acrescenta a seção 13 (fechamento é push) e a memória
+*v1.6.1 — 2026-08-19. v1.6.1 corrige a vitrine (a `description` parava na v1.4,
+e o catálogo anunciava versão velha com o corpo novo) e acrescenta à memória do CRLF
+que na sessão Cowork remota o `core.autocrlf` é **por sessão** — container efêmero.
+Achados do Claude do Maná-Dev na verificação cruzada.
+v1.6.0 — 2026-08-19. v1.6 acrescenta a seção 13 (fechamento é push) e a memória
 `documentacao-a-frente-do-codigo.md`, tiradas da varredura dos 62 repos do parque.
 v1.5.0 — 2026-08-18. v1.5 acrescenta a seção 12 (diff fantasma de CRLF: nunca
 commitar varredura suja em lote) e reescreve a memória do CRLF com a cura sem

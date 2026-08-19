@@ -63,7 +63,14 @@ de arquivos "sujos" para **0**.
 
 > ⚠️ **O `--global` é por usuário/máquina, e são duas máquinas.** O Cowork remoto
 > tem o `~/.gitconfig` dele, separado do Git Bash do Windows: configurar num não
-> configura o outro. E máquina antiga não herda o POP — na hub (18/08) o
+> configura o outro.
+>
+> ⚠️ **Na sessão Cowork remota é POR SESSÃO, não uma vez.** O container é efêmero:
+> cada sessão nova nasce com `~/.gitconfig` limpo. Sintoma clássico — um Claude vê
+> o parque limpo e outro vê 28 repos sujos, no mesmo instante, e **os dois estão
+> certos** (aconteceu em 19/08 entre a conta pessoal e a Maná-Dev). **Antes de
+> varrer o parque numa sessão remota, rode `git config --global core.autocrlf` e
+> confira: vazio = sete `input` primeiro, senão o relatório sai cheio de fantasma.** E máquina antiga não herda o POP — na hub (18/08) o
 > `core.autocrlf` estava **vazio no global e em todos os repos**, embora o POP de
 > passagem de bastão exija a linha desde a Fase 2.4. Em máquina já rodando,
 > confira: `git config --global core.autocrlf` (vazio = você tem o problema).

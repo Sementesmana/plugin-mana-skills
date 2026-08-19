@@ -1,5 +1,5 @@
 {
   "name": "mana-skills",
   "description": "Pacote institucional Mana Builder — 14 skills essenciais: mana-builder-guia (entrada), novo-agente-mana (scaffold), mana-arquitetura-padrao (LLM+WhatsApp obrigatorio), akita (seguranca), softexpert-wf-ws + softexpert-dataset-integration (SoftExpert), softexpert-analise-tempos (tempo/gargalo em processo do SE), mana-habilidade-se-dataset-reader + mana-habilidade-data-lake-pg (dados), mana-simpleagro + mana-softexpert (SDKs), mana-habilidade-notificacao-whatsapp (notificacoes), mana-memoria-operacional (cerebro dono), onboarding-dono-agente (handoff).",
-  "version": "1.3.0"
+  "version": "1.3.1"
 }
