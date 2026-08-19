@@ -310,6 +310,23 @@ já apagou edição não commitada aqui. Em repo que mais de uma máquina clona,
 Detalhe, comando de varredura do parque inteiro e as duas lições caras em
 [`memorias/git-crlf-fantasma-e-checkout.md`](memorias/git-crlf-fantasma-e-checkout.md).
 
+## 13. Fechamento é push, não "funcionou"
+
+Ao fim de toda tarefa não trivial, **perguntar explicitamente se sobe pro Git** — com o
+comando pronto — e atualizar a nota do vault e a SKILL junto. Sem esse rito, o trabalho
+fica no disco e a documentação segue em frente sozinha: na varredura de 18–19/08 o parque
+tinha **quatro** funcionalidades descritas como prontas no vault e ausentes do repositório,
+com atrasos de 13 dias a 2 meses — uma delas devolvendo 404 em produção e exibindo painel
+zerado como se fosse dado.
+
+Onde a nota está à frente do código, ela é o **mapa do que falta**: não apague nem corrija
+a data — confira contra o código e commite. Antes de subir trabalho represado, três
+conferências: `git fetch` (log local é cache, não verdade), dependências no
+`requirements.txt`, e colisão com o que entrou depois.
+
+Detalhe, tabela dos quatro casos e a varredura periódica em
+[`memorias/documentacao-a-frente-do-codigo.md`](memorias/documentacao-a-frente-do-codigo.md).
+
 ## Como instalar (dev novo)
 
 1. Cockpit Maná Builder → card **Skills (plugin)** → `mana-memoria-operacional`
@@ -322,7 +339,9 @@ Detalhe, comando de varredura do parque inteiro e as duas lições caras em
    nasce com a memória da casa e o repo com o contrato de trabalho.
 
 ---
-*v1.5.0 — 2026-08-18. v1.5 acrescenta a seção 12 (diff fantasma de CRLF: nunca
+*v1.6.0 — 2026-08-19. v1.6 acrescenta a seção 13 (fechamento é push) e a memória
+`documentacao-a-frente-do-codigo.md`, tiradas da varredura dos 62 repos do parque.
+v1.5.0 — 2026-08-18. v1.5 acrescenta a seção 12 (diff fantasma de CRLF: nunca
 commitar varredura suja em lote) e reescreve a memória do CRLF com a cura sem
 checkout (`core.autocrlf input`), depois da varredura dos 61 repos do parque.
 v1.4.0 — 2026-08-18. v1.1 adiciona seção 0 (CLAUDE.md do dono + instruções de
