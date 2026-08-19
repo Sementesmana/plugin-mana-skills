@@ -9,12 +9,12 @@ description: >-
   Postgres remoto com keepalives. Também quando o dev travar com: git
   pull/push falhando, arquivo que "não salva", deploy que não sobe, Railway,
   banco-mana remoto. Se a conversa é "por que isso não funciona na minha
-  máquina?" — use esta skill. v1.1: GERA o CLAUDE.md do repo — peça "semeia a
-  memória e configura o repo". v1.4: falha nunca vira dado, 452 single-session
-  do SA, conferir por conjunto e não por contagem, Cowork pela bridge. v1.5:
-  diff fantasma de CRLF — nunca commitar varredura suja em lote; cura por
-  core.autocrlf, jamais git checkout. v1.6: fechamento é push, não
-  "funcionou"; documentação à frente do código.
+  máquina?" — use esta skill. GERA também o CLAUDE.md do repo — peça "semeia a
+  memória e configura o repo". Traz: falha nunca vira dado, 452 do SA, conferir
+  por conjunto e não por contagem, diff fantasma de CRLF (cura por
+  core.autocrlf, jamais git checkout), fechamento é push e não "funcionou",
+  documentação à frente do código, e os 3 pontos a conferir ao publicar skill
+  no marketplace (espelho, versão nos dois JSONs, card do cockpit).
 ---
 
 # Memória Operacional Maná — kit do dono de agente
@@ -327,6 +327,29 @@ conferências: `git fetch` (log local é cache, não verdade), dependências no
 Detalhe, tabela dos quatro casos e a varredura periódica em
 [`memorias/documentacao-a-frente-do-codigo.md`](memorias/documentacao-a-frente-do-codigo.md).
 
+## 14. Mexeu em skill do marketplace? Confira os TRÊS pontos antes de fechar
+
+Publicar não é só editar o `SKILL.md`. A skill vive em três lugares e eles divergem
+sozinhos — cada um por um motivo diferente:
+
+| Ponto | O que conferir | Como diverge |
+|---|---|---|
+| **1. Espelho no `_kits/`** | `plugins/<x>/skills/<x>/SKILL.md` e `_kits/skills/governanca/<x>/SKILL.md` **byte a byte** (`md5sum` nos dois) | edita-se um e esquece o outro |
+| **2. Versão em DOIS arquivos** | `plugins/<x>/.claude-plugin/plugin.json` **e** `.claude-plugin/marketplace.json` | bumpar só um deixa o Cowork sem sinal de que mudou |
+| **3. Card no cockpit** | `agente-monitor/plataforma_agentica.py` — nome com a versão **e** a descrição | é outro repo; ninguém lembra |
+
+E um quarto que não é arquivo: **a `description` do frontmatter**. Ela tem teto de
+**1024 caracteres** e é a *vitrine* — o catálogo de skills mostra ela, não o corpo. Se
+o corpo vai pra v1.6 e a `description` para na v1.4, todo mundo enxerga versão velha e
+não abre a skill. Como o teto é fixo, **cada versão nova disputa espaço com as antigas**:
+resuma o que envelheceu em vez de só empilhar.
+
+⚠️ **Caso real (19/08):** seis bumps de versão num dia e **zero** conferências do
+cockpit — o card ficou anunciando `v1.3.0` e "5 memórias iniciais" com a skill em v1.6.1
+e 11 memórias. Quem pegou foi o Claude de OUTRA conta, na verificação cruzada. A regra
+existia; morava só na memória local de uma máquina, que é ilha. Por isso ela está aqui
+agora: **regra que não viaja pelo marketplace não é regra, é lembrete pessoal.**
+
 ## Como instalar (dev novo)
 
 1. Cockpit Maná Builder → card **Skills (plugin)** → `mana-memoria-operacional`
@@ -339,7 +362,11 @@ Detalhe, tabela dos quatro casos e a varredura periódica em
    nasce com a memória da casa e o repo com o contrato de trabalho.
 
 ---
-*v1.6.1 — 2026-08-19. v1.6.1 corrige a vitrine (a `description` parava na v1.4,
+*v1.7.0 — 2026-08-19. v1.7 promove pra cá a regra dos três pontos do marketplace
+(seção 14) — espelho, versão nos dois JSONs, card do cockpit e a vitrine de 1024
+caracteres. Motivo: a regra existia só na memória local de uma máquina e foi violada
+seis vezes num dia; quem pegou foi o Claude de outra conta.
+v1.6.1 — 2026-08-19. v1.6.1 corrige a vitrine (a `description` parava na v1.4,
 e o catálogo anunciava versão velha com o corpo novo) e acrescenta à memória do CRLF
 que na sessão Cowork remota o `core.autocrlf` é **por sessão** — container efêmero.
 Achados do Claude do Maná-Dev na verificação cruzada.
