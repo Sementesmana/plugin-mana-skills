@@ -446,6 +446,38 @@ O que **não** se "arruma" sem falar com o Xayer — cada item tem teste:
 - Rotas do mapa são todas `@exige_pe()` (factory, com parênteses). Teste percorre o AST do
   `routes_pe.py` e falha se alguma rota nova ficar sem o decorator.
 
+### A tela É o mapa desenhado — não uma releitura
+
+`templates/pe_mapa.html` porta o HTML que nasceu na conversa com o Xayer
+(`estrategia/piramide-financeira-mana.html`): mesma paleta, mesma forma, mesmas setas. A
+forma carrega leitura e por isso está travada em teste:
+
+- `mapa_base.LAYOUT` diz como cada faixa se desenha — **financeira e clientes em COLUNAS**
+  (ali é uma conta e uma jornada, andam da esquerda pra direita) e **processos e aprendizado
+  em GRUPOS** (blocos de competência lado a lado, com grade).
+- `mapa_base.GRUPOS` guarda, por (perspectiva, título): quantas colunas na grade, o peso na
+  linha, o estilo e **em que linha** o grupo entra — é o que faz o apoio descer para baixo
+  dos dois blocos de negócio (ele serve todas as etapas, não é etapa).
+- `mapa_base.css_do_no()` decide a cor, e cor aqui é semântica: azul = competência
+  financeira, verde = operacional, âmbar = processo da safra, roxo = aprendizado, círculo =
+  meta redonda.
+- `mapa_base.PEDAGIOS` são os rótulos em cima da seta (D&A, IR/CSLL, Δ giro, CAPEX, serviço
+  da dívida): a conta ATRAVESSA, mas não são objetivo de ninguém — por isso não viram nó.
+- `.content{max-width:none}` no topo do template: o layout do app trava em 1280px e o mapa
+  tem 5 colunas na financeira e 6 no apoio. Há ainda o botão **⛶ tela cheia**, que esconde
+  sidebar e topbar (classe `mapa-cheio` no body).
+- Chip de contagem só aparece no nível que TEM indicador — chip zerado rouba a linha da meta
+  e não informa nada.
+
+### `meta_txt` — a meta do mapa é frase, não número
+
+`pe_objetivos.as_is`/`to_be` são **NUMERIC** (servem ao scorecard do wizard). A meta do mapa
+é como o gestor a enuncia: "≤ 84% da ROL", "OTIF ≥ 95%", "spread líq. ≥ 13% a.a.". Por isso
+existe `meta_txt TEXT` — gravar a frase em `to_be` derruba o seed inteiro com
+`invalid input syntax for type numeric` (aconteceu em 22/08). `mapa_base.METAS_REF` traz a
+meta de referência de cada um dos 40 nós; o seed grava, a tela edita no blur
+(`PATCH /api/pe/<cid>/objetivos/<id>` pela whitelist) e semear de novo **não sobrescreve**.
+
 ### Próximo passo previsto
 
 Aba de **Rituais** (reuniões de acompanhamento no modelo G4: Results mensal → FCA dos 5–7
