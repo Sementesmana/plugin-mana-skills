@@ -364,6 +364,13 @@ agora: **regra que não viaja pelo marketplace não é regra, é lembrete pessoa
    nasce com a memória da casa e o repo com o contrato de trabalho.
 
 ---
+*v1.10.0 — 2026-08-22. v1.10 acrescenta a **prova de frescor** em
+`memorias/verificar-por-conjunto.md`: conjunto completo não garante conteúdo fresco.
+Definir ANTES da migração uma pergunta cuja resposta certa só existe se a última
+atualização chegou, e checar o artefato de ORIGEM antes de culpar o transporte — o
+achado que gerou a regra foi a memória do 452 já estar velha dentro do próprio backup.
+Origem: conferência do one-way pro Claude Team (22/08).*
+
 *v1.9.0 — 2026-08-21. v1.9 acrescenta `memorias/sa-api-mente-listagem-e-limit.md`
 (a API do SA mente: listagem trunca lista aninhada — só o data_volume mais recente;
 limit=-1 vem incompleto e o `total` mente junto — sempre paginado; listagem é índice,
