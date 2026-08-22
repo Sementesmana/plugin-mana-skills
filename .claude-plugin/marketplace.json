@@ -9,8 +9,8 @@
     {
       "name": "mana-skills",
       "source": "./plugins/mana-skills",
-      "description": "Pacote institucional Mana Builder — 14 skills essenciais: mana-builder-guia (entrada), novo-agente-mana (scaffold), mana-arquitetura-padrao (LLM+WhatsApp obrigatorio), akita (seguranca), softexpert-wf-ws + softexpert-dataset-integration (SoftExpert), softexpert-analise-tempos (tempo/gargalo em processo do SE), mana-habilidade-se-dataset-reader + mana-habilidade-data-lake-pg (dados), mana-simpleagro + mana-softexpert (SDKs), mana-habilidade-notificacao-whatsapp (notificacoes), mana-memoria-operacional (cerebro dono), onboarding-dono-agente (handoff).",
-      "version": "1.5.0",
+      "description": "Pacote institucional Mana Builder — 14 skills essenciais: mana-builder-guia (entrada), novo-agente-mana (scaffold), mana-arquitetura-padrao (LLM+WhatsApp obrigatorio), akita (seguranca), softexpert-wf-ws + softexpert-dataset-integration (SoftExpert), softexpert-analise-tempos (tempo/gargalo em processo do SE), mana-habilidade-se-dataset-reader + mana-habilidade-data-lake-pg (dados), mana-simpleagro + mana-softexpert (SDKs), mana-habilidade-notificacao-whatsapp (notificacoes), mana-memoria-operacional v1.9 (cerebro dono: 13 memorias vivas, inclui a API do SA que mente), onboarding-dono-agente (handoff).",
+      "version": "1.6.0",
       "author": {
         "name": "Sementes Mana LTDA"
       }

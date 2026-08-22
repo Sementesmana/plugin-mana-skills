@@ -5,16 +5,17 @@ description: >-
   modelo federado (Dayan, Lorena, Pablo, futuros). Use SEMPRE na PRIMEIRA
   sessão numa máquina nova de dono de agente — semeia a memória do Cowork com
   os gotchas que custam horas: git não autentica no sandbox, index.lock órfão,
-  mount que trunca arquivo recém-editado, heredoc como escrita confiável, pool
-  Postgres remoto com keepalives. Também quando o dev travar com: git
-  pull/push falhando, arquivo que "não salva", deploy que não sobe, Railway,
-  banco-mana remoto. Se a conversa é "por que isso não funciona na minha
-  máquina?" — use esta skill. GERA também o CLAUDE.md do repo — peça "semeia a
-  memória e configura o repo". Traz: falha nunca vira dado, 452 do SA, conferir
-  por conjunto e não por contagem, diff fantasma de CRLF (cura por
-  core.autocrlf, jamais git checkout), fechamento é push e não "funcionou",
-  documentação à frente do código, e os 3 pontos a conferir ao publicar skill
-  no marketplace (espelho, versão nos dois JSONs, card do cockpit).
+  mount que trunca arquivo, heredoc como escrita confiável. Também quando o
+  dev travar com: git pull/push falhando, arquivo que "não salva", deploy que
+  não sobe, Railway, banco-mana remoto. Se a conversa é "por que isso não
+  funciona na minha máquina?" — use esta skill. GERA também o CLAUDE.md do
+  repo — peça "semeia a memória e configura o repo". Traz: falha nunca vira
+  dado, 452 do SA e a API que MENTE (listagem trunca aninhado; limit=-1 e
+  total mentem — sempre paginado, listagem é só índice; vínculo por posição
+  desliza), conferir por conjunto, diff fantasma
+  de CRLF (core.autocrlf, jamais checkout), fechamento é push, documentação à
+  frente do código, e os 3 pontos do marketplace (espelho, dois JSONs, card
+  do cockpit).
 ---
 
 # Memória Operacional Maná — kit do dono de agente
@@ -363,7 +364,16 @@ agora: **regra que não viaja pelo marketplace não é regra, é lembrete pessoa
    nasce com a memória da casa e o repo com o contrato de trabalho.
 
 ---
-*v1.8.0 — 2026-08-19. v1.8 acrescenta `memorias/descartar-no-escuro.md`: `git restore .`
+*v1.9.0 — 2026-08-21. v1.9 acrescenta `memorias/sa-api-mente-listagem-e-limit.md`
+(a API do SA mente: listagem trunca lista aninhada — só o data_volume mais recente;
+limit=-1 vem incompleto e o `total` mente junto — sempre paginado; listagem é índice,
+documento é a verdade; vínculo por posição desliza — vincule pelo _id) e atualiza
+`sa-single-session-452.md` com a cura estrutural EM PRODUÇÃO (mana-sa-gateway:
+credencial própria, portão 2s, zero 452 desde a migração do TMS) + o gotcha do
+token que já vem com "Bearer " (duplicar = 401 com login ok). Origem: migração
+do agente-tms pro gateway, caso do agendamento de 52 bags invisível e caminhão
+#12 vinculado errado (21/08).
+v1.8.0 — 2026-08-19. v1.8 acrescenta `memorias/descartar-no-escuro.md`: `git restore .`
 e a familia toda (`checkout -- .`, `reset --hard`, `clean -fd`) apagam trabalho nao
 commitado sem volta — dois casos reais, mais push rejeitado por commitar de dois lugares
 e committer com e-mail inventado.

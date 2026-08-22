@@ -19,6 +19,7 @@
 | [descartar-no-escuro.md](descartar-no-escuro.md) | trabalho sumiu sem erro; antes de QUALQUER `git restore .` / `checkout -- .` / `reset --hard` / `clean -fd`; push rejeitado com "fetch first"; committer com e-mail @MAQUINA.LOCAL |
 | [documentacao-a-frente-do-codigo.md](documentacao-a-frente-do-codigo.md) | a nota do vault diz "pronto" e o repo não tem; antes de commitar trabalho represado; varredura periódica do parque; fechamento de tarefa |
 | [railway-startcommand-port.md](railway-startcommand-port.md) | deploy sobe mas healthcheck não passa; 502 no Railway; `$PORT` literal no comando |
+| [sa-api-mente-listagem-e-limit.md](sa-api-mente-listagem-e-limit.md) | item existe na tela do SA mas não no agente; conjunto incompleto com limit=-1; `total` que bate mas falta dado; vínculo por posição apontando pro registro errado |
 
 ## Regras deste diretório
 

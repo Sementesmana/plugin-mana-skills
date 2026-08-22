@@ -53,6 +53,23 @@ Complementos validados em produção no mesmo trabalho:
 - **Refresh do lake em background** (intervalo configurável, default 60 min, piso de 5)
   com resposta servida do cache: a tela nunca espera o ERP.
 
+## Cura estrutural EM PRODUÇÃO: mana-sa-gateway (21/08)
+
+A porta única saiu do papel: **mana-sa-gateway** (ADR 2026-08-20) com credencial
+PRÓPRIA de automação (nenhum humano loga com ela — senão o 452 volta), portão
+serializado com espaçamento de 2s, lake `sa_lake` no banco-mana (leitura
+pública, escrita só do gateway), frescor declarado pelo chamador e X-API-Key
+por agente. TMS migrado 21/08: **zero 452 desde então**. Agentes novos que leem
+o SA: consumir o gateway (`SA_GATEWAY_URL`/`SA_GATEWAY_KEY`), não o SA direto.
+
+Dois gotchas de login descobertos na migração:
+
+- **O token do SA já vem com `Bearer `** — prefixar de novo vira
+  `Bearer Bearer <token>` = **401 em toda chamada com login "ok"** (o POST de
+  login não usa o header, então o login passa e o resto morre). Sempre:
+  `raw if raw.startswith("Bearer ") else "Bearer " + raw`.
+- A API também mente sobre completude — veja `sa-api-mente-listagem-e-limit.md`.
+
 ## Não faça
 
 - Não trate 452 como "sem dados" — **falha não vira dado** (veja `falha-nao-vira-dado.md`).
