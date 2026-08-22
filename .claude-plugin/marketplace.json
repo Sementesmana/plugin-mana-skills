@@ -64,7 +64,7 @@
       "name": "agente-comercial",
       "source": "./plugins/agente-comercial",
       "description": "Bot WhatsApp dual-mode da Sementes Maná LTDA (N1, produção) — porta de entrada comercial no WhatsApp. Flask no Railway, sem banco próprio além do cadastro de usuários no banco-mana. Modo COMERCIAL - consulta preço, catálogo, frete e filtros no agente-precificacao por tools determinísticas + Claude rápido; modo AGRÔNOMO - consultoria de soja sobre knowledge_base_agronomo.md com estratificação de modelos (classificação rápida, recomendação equilibrada, dúvida técnica no modelo forte). Recebe payload raw Z-API do...",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "author": {
         "name": "Sementes Mana LTDA"
       }
@@ -73,7 +73,7 @@
       "name": "agente-comercio-revendas",
       "source": "./plugins/agente-comercio-revendas",
       "description": "Plataforma de comercialização das revendas parceiras da Sementes Maná LTDA — as revendas informam periodicamente o volume já comercializado dos produtos adquiridos, e a Maná acompanha a velocidade de comercialização. Flask + PostgreSQL (schema comercializacao) no Railway, integrado ao Simple Agro via SDK mana-simpleagro + cache via habilidade data-lake-pg, scaffold via novo-agente-mana. Reaprov...",
-      "version": "1.0.0",
+      "version": "1.0.2",
       "author": {
         "name": "Sementes Mana LTDA"
       }
@@ -190,7 +190,7 @@
       "name": "agente-mapa-pedidos",
       "source": "./plugins/agente-mapa-pedidos",
       "description": "Mapa de atuação comercial da Sementes Maná LTDA (painel N2, produção) — onde a Maná vende soja, por município. Flask + Jinja + Leaflet + Chart.js + Alpine no Railway, sem banco próprio - lê pedidos do Simple Agro pelo lake agro.lake_pedidos_raw do banco-mana (fonte única anti-452, mantida pelo agente-agro) com fallback SA ao vivo e cache em memória de 30min. Agrega por município (volume, faturamento, nº de produtores, cultivar dominante, top clientes), classifica o município pela faixa do MAIOR cliente (top >100...",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "author": {
         "name": "Sementes Mana LTDA"
       }
@@ -199,7 +199,7 @@
       "name": "agente-metas-comercial",
       "source": "./plugins/agente-metas-comercial",
       "description": "CPM Comercial (gestor Alex Matias) — app de gestão de metas por vendedor e cultivar da Sementes Maná LTDA. Substitui planilha manual semanal: realizado automático do Simple Agro (funil-espelho do agente-estoque), metas versionadas com cascateamento (INICIAL/CASCATA/REALOCACAO/AJUSTE), telas painel/consolidado/metas/timeline/config, multi-safra com seletor na sidebar. Flask+PostgreSQL schema metas, gunicorn 1 worker gthread 8 threads, deploy Railway. Fase 2 plugável: alimentação SoftExpert CPM via DI014 + SOAP.",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "author": {
         "name": "Sementes Mana LTDA"
       }
@@ -208,7 +208,7 @@
       "name": "agente-monitor",
       "source": "./plugins/agente-monitor",
       "description": "Torre de controle de runtime + cockpit de governança IA-First da Sementes Maná LTDA. Flask + APScheduler no Railway. Três missões num só serviço — (1) loop health de 19+ agentes a cada 5min com alerta WhatsApp ao grupo TI quando algum cai 2x consecutivas (ALERT_AFTER_FAILURES=2, ALERT_COOLDOWN=30min, HISTORY_MAX=288 = 24h); (2) aba Consumos que lê custo de IA por agente do mana-llm-gateway (LLM_GATEWAY_MASTER_KEY server-side, resolve alias→modelo via /model/info) + custo de infra Railway via /api/railway-usage...",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "author": {
         "name": "Sementes Mana LTDA"
       }
@@ -226,7 +226,7 @@
       "name": "agente-pedidos",
       "source": "./plugins/agente-pedidos",
       "description": "Ponte de LEITURA SoftExpert ↔ Simple Agro da Sementes Maná LTDA + painel-reais da carteira de crédito. Flask no Railway, somente leitura no SE (nada é gravado no formulário). O SE chama /pedidos-venda como Fonte de Dados REST na atividade de crédito — o agente lê o cpf_cnpj do scred via SOAP fm_ws, autentica no SA com usuário dedicado, busca pedidos Soja/safra 26/27, expande grupo econômico pelos CNPJs do campo grupoeconomico e mapeia SA→grid SE via CAMPO_MAP (lista de fallbacks por campo, porque o SA renomeia...",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "author": {
         "name": "Sementes Mana LTDA"
       }
@@ -253,7 +253,7 @@
       "name": "agente-protheus",
       "source": "./plugins/agente-protheus",
       "description": "Gateway REST de LEITURA do Protheus da Sementes Maná LTDA (plataforma N1, produção). Flask no Railway que conecta DIRETO no SQL Server do Protheus via pymssql (não é via SE dataset — o docstring do repo está desatualizado) e expõe datasets catalogados por HTTP - cliente (SA1010) e vendedorcliente1 (SA1010+SA3010), com estoque/pedidos/títulos como TODO. Consumido pelo SoftExpert (CORS restrito a sementesmana.softexpert.app e -test, Atividade Sistêmica) e por painéis Maná via X-API-Key ou cookie de sessão de 8h...",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "author": {
         "name": "Sementes Mana LTDA"
       }

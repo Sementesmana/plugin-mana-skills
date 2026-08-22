@@ -1,5 +1,5 @@
 {
   "name": "agente-protheus",
   "description": "Gateway REST de LEITURA do Protheus da Sementes Maná LTDA (plataforma N1, produção). Flask no Railway que conecta DIRETO no SQL Server do Protheus via pymssql (não é via SE dataset — o docstring do repo está desatualizado) e expõe datasets catalogados por HTTP - cliente (SA1010) e vendedorcliente1 (SA1010+SA3010), com estoque/pedidos/títulos como TODO. Consumido pelo SoftExpert (CORS restrito a sementesmana.softexpert.app e -test, Atividade Sistêmica) e por painéis Maná via X-API-Key ou cookie de sessão de 8h...",
-  "version": "1.0.0"
+  "version": "1.0.1"
 }

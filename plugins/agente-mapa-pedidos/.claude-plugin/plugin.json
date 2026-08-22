@@ -1,5 +1,5 @@
 {
   "name": "agente-mapa-pedidos",
   "description": "Mapa de atuação comercial da Sementes Maná LTDA (painel N2, produção) — onde a Maná vende soja, por município. Flask + Jinja + Leaflet + Chart.js + Alpine no Railway, sem banco próprio - lê pedidos do Simple Agro pelo lake agro.lake_pedidos_raw do banco-mana (fonte única anti-452, mantida pelo agente-agro) com fallback SA ao vivo e cache em memória de 30min. Agrega por município (volume, faturamento, nº de produtores, cultivar dominante, top clientes), classifica o município pela faixa do MAIOR cliente (top >100...",
-  "version": "1.0.0"
+  "version": "1.0.1"
 }

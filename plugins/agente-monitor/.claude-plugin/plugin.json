@@ -1,5 +1,5 @@
 {
   "name": "agente-monitor",
   "description": "Torre de controle de runtime + cockpit de governança IA-First da Sementes Maná LTDA. Flask + APScheduler no Railway. Três missões num só serviço — (1) loop health de 19+ agentes a cada 5min com alerta WhatsApp ao grupo TI quando algum cai 2x consecutivas (ALERT_AFTER_FAILURES=2, ALERT_COOLDOWN=30min, HISTORY_MAX=288 = 24h); (2) aba Consumos que lê custo de IA por agente do mana-llm-gateway (LLM_GATEWAY_MASTER_KEY server-side, resolve alias→modelo via /model/info) + custo de infra Railway via /api/railway-usage...",
-  "version": "1.0.0"
+  "version": "1.0.1"
 }
