@@ -1,6 +1,6 @@
 ---
 name: agente-governanca
-description: Plataforma de Governança por Processo da Sementes Maná — app Flask+PG (schema governanca)+Railway onde as áreas constroem a governança de cada processo em wizard guiado (SIPOC Bloco A, tartaruga Bloco B, zoom por atividade Bloco C), com IC×IV Falconi, riscos↔controles N:N, requisitos auditáveis, versionamento AS IS→TO BE e geração de .bpmn no dialeto SoftExpert. Inclui o módulo de PLANEJAMENTO ESTRATÉGICO (Maná-Estratégia, método Antônio Napoli em 10 etapas, 23 tabelas pe_*, coleta individual antes da reunião, acesso FECHADO por padrão via colaboradores.acesso_pe lido do banco a cada request), importador Bizagi/BPMN, organograma gráfico, agenda por departamento com .ics no Outlook e construtor de documentos. Use SEMPRE no agente-governanca — wizard, tartaruga, SIPOC, BPMN, cockpit, organograma D-G-S-A, módulo estratégico, agenda, copiloto. Também quando mencionar: Maná Mapeia, Maná-Estratégia, diagrama de tartaruga, requisito auditável, dialeto BPMN SE, funil de automação, pe_ciclos, acesso_pe, método Napoli.
+description: Plataforma de Governança por Processo da Sementes Maná — Flask+PG (schema governanca)+Railway: as áreas constroem a governança de cada processo em wizard guiado (SIPOC, tartaruga de 2 níveis, IC×IV Falconi, riscos↔controles N:N, requisitos auditáveis, versionamento AS IS→TO BE) e a plataforma gera o .bpmn no dialeto SoftExpert. Inclui o módulo de PLANEJAMENTO ESTRATÉGICO (Maná-Estratégia, método Antônio Napoli em 10 etapas, tabelas pe_*, coleta individual antes da reunião, acesso FECHADO por padrão via colaboradores.acesso_pe, lido do banco a cada request) e o Maná Results (mapa estratégico BSC, semeadura idempotente, desdobramento estratégico→tático→operacional), mais importador Bizagi/BPMN, organograma gráfico, agenda com .ics e construtor de documentos. Use SEMPRE no agente-governanca. Também quando mencionar: Maná Mapeia, Maná-Estratégia, Maná Results, mapa estratégico, BSC, RFL, tartaruga, requisito auditável, dialeto BPMN SE, pe_ciclos, acesso_pe, método Napoli, cockpit.
 ---
 
 # agente-governanca — Plataforma de Governança por Processo
@@ -94,6 +94,13 @@ rascunho→enviado (área) → validado_gestor|devolvido (gestor) → em_modelag
 - templates usam Alpine: qualquer @click novo precisa estar sob um elemento com x-data.
 - capacitação embutida = static/capacitacao.html (cópia do deck; atualizar junto com o deck).
 - schema init tolera boot sem DATABASE_URL (pra testes) — não remover o try/except do main.py.
+- **Nada de `json.dumps` cru sobre linha do banco** (incidente 2026-08-19, entrevista do /pe
+  morria na 1ª resposta com 502: `Object of type datetime is not JSON serializable`, por causa
+  do `criado_em TIMESTAMPTZ`). Regra: estado que vai pro prompt passa por
+  `consultor._json_estado()` — `default=str` cobre datetime/date/Decimal, remove colunas de
+  controle (id, ciclo_id, autor_id, criado_em) que só gastam token, corta em ~6000 chars e é
+  **fail-soft**: se falhar devolve `"{}"` em vez de derrubar a entrevista. Há 4 testes de
+  regressão, incluindo `entrevistar()` ponta a ponta com `copiloto._chamar` mockado.
 
 ## Disciplina Organizacional (/org — 2026-08-07, espelho SE)
 Estrutura decodificada das telas do SE: Unidade organizacional (AD003, árvore=organograma)
@@ -220,7 +227,7 @@ tabela legada mantida só pra colaboradores.cargo_id até a etapa Colaborador).
   tipo vira 'modelo_proprio' (está em TIPOS, fora de LAYOUTS — o chooser exclui).
   Dependência: python-docx==1.1.2 no requirements.
 
-## Módulo Planejamento Estratégico — Maná-Estratégia (2026-08-11→18)
+## Módulo Planejamento Estratégico — Maná-Estratégia (2026-08-11→19)
 
 Segundo módulo do app, ao lado do mapeamento de processo. **Método Antônio Napoli**
 (sócio-fundador da Catálises, consultor que desenhou o plano estratégico do G4), destilado
@@ -246,13 +253,43 @@ da entrevista no Papo de Gestão em **10 etapas** — a lógica vive em `app/con
 `pe_coleta_feita`.
 
 **Rotas** (`app/routes_pe.py`): `/pe` (lista de ciclos) · `/pe/novo` · `/pe/<cid>` ·
-`/pe/<cid>/minha` (**coleta individual opcional antes da reunião**) · API
+`/pe/<cid>/minha` (**coleta individual opcional antes da reunião**) ·
+`/pe/<cid>/entrevista` (modo conversa) · `/pe/<cid>/pauta` (**pauta da reunião**) · API
 `PATCH /api/pe/<cid>/ciclo` · `POST /api/pe/<cid>/unico/<tabela>` (registro único) ·
 CRUD genérico `POST|PATCH|DELETE /api/pe/<cid>/<tabela>[/<iid>]` · `/api/pe/<cid>/metas` ·
-`/api/pe/<cid>/participantes[/<pid>]`. Telas: `pe.html`, `pe_lista.html`,
-`pe_entrevista.html`.
+`/api/pe/<cid>/participantes[/<pid>]` · `/api/pe/<cid>/contribuicoes/<etapa>` ·
+`POST /api/pe/<cid>/consolidar`. Telas: `pe.html`, `pe_lista.html`, `pe_entrevista.html`,
+`pe_pauta.html`.
 
 **Ditado por voz em todo campo de resposta do wizard** (mesma linha da decisão 17).
+
+### Coleta individual — como o dado se separa
+
+Linha com `autor_id IS NULL` **é o plano**; linha com `autor_id` preenchido **é contribuição
+de uma pessoa**. Só as etapas de PERCEPÇÃO se coletam sozinho
+(`ETAPAS_INDIVIDUAIS = alinhamento, servico, peers, diagnostico, ambicao`) — decisão (arena,
+invariantes, escolhas, desdobramento, cobrança) é para fazer junto, de propósito. Sigilo até
+todos concluírem (`_coleta_aberta`); só o condutor consolida, e `consolidar` copia para o
+plano sem duplicar (dedup por CHAVE).
+
+### Pauta da reunião (`/pe/<cid>/pauta`) — 2026-08-19
+
+Roteiro de **10 blocos** montado a partir do que cada um trouxe na coleta, imprimível em PDF.
+O núcleo é classificar cada item em **três montes** — e a distinção é o produto:
+- **consenso** — todos trouxeram: não gasta tempo de reunião, vai direto pro plano;
+- **divergência de FATO** — enxergam a mesma realidade diferente: resolve com **dado** (quem
+  busca, até quando), não com discussão;
+- **divergência de VONTADE** — querem coisas diferentes: não existe dado que resolva, resolve
+  com **acordo escrito** (às vezes o acordo é concordar em discordar).
+
+`NATUREZA` em consultor.py define o monte por etapa (alinhamento e ambição = vontade;
+serviço, peers e diagnóstico = fato). `montar_pauta()` devolve os blocos com `quem_falta` e
+`n_coletado` — este último existe para distinguir **"ninguém respondeu ainda"** de **"todos
+responderam e não sobrou atrito"**, que na primeira versão apareciam iguais na tela.
+Filtros `so_onde`/`nao_onde` (via `_cabe_no_bloco`) impedem o **mesmo item de aparecer em dois
+blocos** — o horizonte, por exemplo, bebe do alinhamento nos blocos 1 e 2. Teste trava isso
+(`test_pauta_nao_repete_o_mesmo_item_em_dois_blocos`) e o tempo total
+(`test_pauta_cabe_em_dois_meios_dias`, 240–360 min).
 
 ### ⚠️ Acesso ao módulo estratégico — fechado por padrão
 
@@ -280,6 +317,140 @@ request é o preço de conseguir revogar acesso a conteúdo estratégico na hora
   JWT como string** (embed do painel dentro do SoftExpert).
 - **Performance**: gunicorn timeout 120s, **28 índices**, gzip, cache de estáticos, render
   não-bloqueante e cronômetro por rota.
+
+## Decisão 22 (2026-08-17→19) — módulo Planejamento Estratégico (consultor Maná-Estratégia, método Napoli)
+
+- Módulo NOVO ao lado do wizard de processo: `/pe` (lista), `/pe/<cid>` (wizard das 10 etapas)
+  e `/pe/<cid>/entrevista` (modo conversa). Blueprint `pe` em `app/routes_pe.py`, registrado no
+  `main.py` depois de `bp_entrevista`. Link na seção Estratégia da sidebar (`base.html`).
+- **Método = Antônio Napoli** (Catálises; desenhou o plano estratégico do G4), destilado da
+  entrevista dele no Papo de Gestão. NÃO é o workbook do G4 — a primeira versão do módulo era,
+  e foi substituída. 10 etapas: alinhamento dos sócios → a quem você serve → arena (mercado e
+  geografia) → peer group → diagnóstico de fora pra dentro → ambição + confronto honesto →
+  o que NÃO vai mudar → escolhas (cada uma com o seu "não") → desdobramento → divulgação e
+  cobrança. A ordem é o produto: `POST /api/pe/<cid>/etapa` devolve **409** com a lista de
+  etapas travadas quando se tenta pular.
+- **Cada etapa se explica na tela** antes de pedir qualquer coisa: `METODO` em `consultor.py`
+  carrega `o_que_e`, `por_que`, `napoli` (a tese que origina a etapa), `erro` (o erro clássico)
+  e `perguntas` (o roteiro). O template renderiza os quatro blocos. Pergunta na tela sem essa
+  explicação foi reclamação explícita do Xayer — não reintroduzir.
+- **`app/consultor.py` é o núcleo e é DETERMINÍSTICO** (mesma decisão 3 do copiloto do wizard):
+  as travas rodam com `LLM_GATEWAY_URL/KEY` vazios. `consultor.ligado()` só controla os botões
+  ✨ e o modo entrevista. NUNCA mover trava para o prompt.
+- **A trava mais importante é a ordem do desdobramento**: estrutura → cultura → sistema de
+  gestão → sistema de incentivo. `criticar_desdobramento` recusa camada preenchida com a
+  anterior vazia. Motivo (Napoli): contexto vence força de vontade; quem começa pelo bônus
+  compra o comportamento errado a preço cheio. A UI também desabilita o botão da camada.
+- A régua de metas (gatilho de 80% sem interpolação, faixas 80/100/120, card de 4–6, peso
+  10–50%, multiplicador por camada) vive DENTRO da 4ª camada — `criticar_incentivo` só é
+  chamada quando a camada `incentivo` tem linha. Constantes: `MULTIPLICADOR`,
+  `CARD_MIN/ALVO/MAX`, `PESO_MIN/MAX`, `GATILHO_PCT`. Mexer nelas muda a doutrina — mudar o
+  teste junto.
+- **Corte seco em 80% não interpola.** `simular_bonus` zera tudo abaixo do gatilho porque a
+  fórmula é multiplicação. 79% é zero, não 79% — não "consertar" para rampa suave.
+- Modo entrevista espelha o Maná-Process (decisão 11): `consultor.entrevistar` devolve
+  `{fala, acoes[]}` e `_aplicar` grava. Toda ação de `_aplicar` é idempotente por nome/texto
+  (não duplica ao repetir). `avancar_etapa` do LLM passa pela MESMA trava do núcleo — o
+  consultor sugere, o núcleo decide.
+- Tabelas `pe_*` no fim do `schema.sql`. As da reformulação: `pe_socios`, `pe_clientes`,
+  `pe_arena`, `pe_peers`, `pe_diagnostico`, `pe_ambicao`, `pe_condicoes`, `pe_invariantes`,
+  `pe_escolhas`, `pe_desdobramento`, `pe_entrevista_msgs`. `pe_arena` e `pe_ambicao` são
+  UNIQUE(ciclo_id) — upsert por `POST /api/pe/<cid>/unico/<tabela>`. `pe_desejos` e
+  `pe_alinhamento` ficaram órfãs da versão do workbook: não usar (não foram dropadas para não
+  perder dado de ciclo antigo).
+- Migração do CHECK de `pe_ciclos.etapa`: DROP CONSTRAINT IF EXISTS + UPDATE das etapas antigas
+  para `'alinhamento'` + ADD CONSTRAINT. É idempotente por causa do DROP IF EXISTS — testado
+  aplicando `schema.sql` duas vezes e sobre um banco com o esquema antigo.
+- CRUD genérico igual ao do wizard: `TABELAS` (colunas graváveis, coluna de vínculo) +
+  POST/PATCH/DELETE em `/api/pe/<cid>/<tabela>`. `_limpar` converte `""` para NULL nas
+  `NUMERICAS`.
+- Gotcha que já mordeu duas vezes: `exige_login` é decorator FACTORY, usar `@exige_login()`;
+  e o token só tem `sub/nome/perfil/area_id` (**NÃO tem `id`**) — há teste de regressão para
+  os dois. O mesmo vale para `exige_pe()`.
+
+## Maná Results — mapa estratégico e desdobramento (decisão 23, 2026-08-22)
+
+Terceira tela do módulo estratégico, entre o wizard (como se chega na estratégia) e os ritos
+(como se cobra). O nome é do **rito do G4**: "Results" é a reunião mensal onde se olha o
+placar inteiro antes de escolher os desvios que viram FCA. Rotas: `/pe/mapa` (atalho pro
+ciclo mais recente) e `/pe/<cid>/mapa`; API `POST /api/pe/<cid>/mapa/semear`,
+`POST|DELETE /api/pe/<cid>/mapa/ligacoes[/<lid>]`, `GET /api/pe/<cid>/objetivo/<oid>`.
+Tela: `templates/pe_mapa.html`. Base do desenho: `app/mapa_base.py`.
+
+### A decisão que sustenta o módulo: o nó do mapa É `pe_objetivos`
+
+**Não existe tabela de nó do mapa** — só `pe_mapa_ligacoes` (as setas). O nó do mapa é uma
+linha de `pe_objetivos` com `perspectiva` preenchida; quem tem `perspectiva=''` é objetivo
+antigo, de fora do mapa, e continua funcionando. Motivo: `pe_indicadores.objetivo_id` já
+existe — reusando `pe_objetivos`, **o desdobramento estratégico → tático → operacional vem
+de graça** (`pe_indicadores.nivel` + `pai_id` auto-referente). Criar tabela própria
+"pra ficar limpo" quebra exatamente o que o módulo existe para fazer. `test_mapa.py` trava
+a ausência de `pe_mapa_objetivos` no schema.
+
+### Colunas novas (ALTERs no fim do `schema.sql`)
+
+- `pe_objetivos`: `perspectiva` (CHECK '' | financeira | clientes | processos | aprendizado),
+  `grupo`, `memoria`, `explicacao`, `valor_ref`, `sub_ref`, `cod`, `formato`
+  (card | circulo | faixa), `col`, `chave`.
+- `pe_indicadores`: `nivel` (CHECK estrategico | tatico | operacional), `pai_id`
+  (FK auto-referente, ON DELETE SET NULL), `area_id`, `frequencia`.
+- `pe_mapa_ligacoes` (ciclo_id, de_id, para_id, tipo cadeia|sobe|influencia, secundaria)
+  com **UNIQUE (de_id, para_id)** — seta duplicada é ruído visual, não informação.
+- `ux_pe_objetivos_chave` — índice único parcial `(ciclo_id, chave) WHERE chave <> ''`. **É
+  ele que torna semear idempotente**; sem ele, apertar o botão duas vezes duplica o mapa.
+
+### Semear é idempotente e NÃO sobrescreve
+
+`POST .../mapa/semear` insere só o que falta (match por `chave`) e devolve
+`{objetivos_criados, ja_existiam, ligacoes_criadas}`. O que o usuário editou na tela
+**permanece**: semear de novo não toca em linha existente. Só o **condutor** do ciclo semeia,
+e a rota roda `mapa_base.validar()` antes de gravar — mapa base inconsistente espalharia lixo
+por 40 objetivos de uma vez, e desfazer é manual.
+
+### O desenho (`app/mapa_base.py`) carrega doutrina, não é enfeite
+
+40 nós, 54 ligações, 102 indicadores candidatos, nas 4 perspectivas do BSC (Kaplan & Norton).
+O que **não** se "arruma" sem falar com o Xayer — cada item tem teste:
+
+- **Corte Falconi/INDG**: a DRE tem duas competências. **Operacional** (ROL → EBITDA) prova a
+  cadeia de valor; **financeira** (EBITDA → lucro) prova juros, prazo e perdas. Por isso
+  `ebitda → lucro_liquido` **e** `rfl → lucro_liquido`, e a mesa financeira sobe pro **RFL,
+  nunca pro EBITDA** — ligar a mesa ao EBITDA seria contar spread como resultado operacional.
+- **RFL = Resultado Financeiro Líquido** (receitas − despesas financeiras): é o nome do
+  indicador da competência financeira. Não renomear — a tela, os testes e o mapa da pirâmide
+  usam essa sigla.
+- **Geração de caixa é o fim da linha**: recebe seta e **não emite nenhuma**. Nó de caixa
+  saindo = alguém inverteu a causalidade do mapa.
+- **Ordem da cadeia da safra** (correção explícita do Xayer): planejamento → cooperados →
+  logística interna → **UBS (beneficiamento/armazenagem) → comercialização → expedição**.
+  Vende depois de beneficiar; expede depois de vender.
+- **Marketing é faixa transversal** (`formato='faixa'`), não etapa: permeia o ciclo inteiro.
+- **Crédito, cobrança, barter e mesa são processos de NEGÓCIO** da competência financeira —
+  não apoio. O critério é "produz resultado que a estratégia conta?", **não** "está no
+  EBITDA?" — a competência financeira mora depois do EBITDA por definição, então esse teste
+  classificaria errado por construção.
+- Causalidade BSC: seta `sobe` só de perspectiva de baixo para de cima
+  (aprendizado → processos → clientes → financeira). O teste recusa o contrário.
+
+### Gotchas
+
+- Todo nó tem `memoria` (memória de cálculo) e `explicacao` — a tela abre o popup com os dois.
+  Nó sem isso é caixa sem procedência, a mesma reclamação que originou o `METODO` explicado na
+  tela do wizard (decisão 22). Teste trava.
+- `pe_mapa.html` define o macro `no_card` **no topo** do bloco: Jinja avalia em ordem e macro
+  declarado depois do laço explode em runtime. Há teste comparando as posições no arquivo.
+- As setas são desenhadas em **SVG no cliente**, a partir da posição real das caixas — não há
+  layout calculado no servidor (diferente do `bpmn_gen`/`org_chart`).
+- API do mapa devolve linha do banco por `_serial()` (datetime→ISO, Decimal→str). **Nada de
+  `jsonify` cru sobre linha do banco** — mesma lição do incidente da entrevista.
+- Rotas do mapa são todas `@exige_pe()` (factory, com parênteses). Teste percorre o AST do
+  `routes_pe.py` e falha se alguma rota nova ficar sem o decorator.
+
+### Próximo passo previsto
+
+Aba de **Rituais** (reuniões de acompanhamento no modelo G4: Results mensal → FCA dos 5–7
+desvios → Comitê de Receita 3×/semana → dailies → S&OP → Direx/Comex), reusando `pe_ritos` e
+o módulo `/agenda` com feed `.ics`. O mapa é o que define os indicadores que os ritos cobram.
 
 ## Roadmap restante (blueprint)
 F5: cargas SE (GRC/CPM/ECM/Competências via MCP/SOAP) + instanciar workflow.
