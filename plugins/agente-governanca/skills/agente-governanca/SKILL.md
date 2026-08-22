@@ -478,6 +478,45 @@ existe `meta_txt TEXT` — gravar a frase em `to_be` derruba o seed inteiro com
 meta de referência de cada um dos 40 nós; o seed grava, a tela edita no blur
 (`PATCH /api/pe/<cid>/objetivos/<id>` pela whitelist) e semear de novo **não sobrescreve**.
 
+### Medição do indicador — velocímetro, N/A e as linhas de receita (2026-08-22)
+
+O painel que abre ao clicar num nó **não é mais leitura**: é a grade onde se digita meta e
+realizado e onde se lê o desvio. A lógica vive em `app/medicao.py` — módulo PURO como
+`bpmn_gen`/`org_chart`/`mapa_base` (teste de AST impede que passe a importar `db` ou `flask`,
+senão a doutrina volta a morar dentro da rota).
+
+- **Grão MENSAL; trimestre e semestre são SOMA calculada na leitura.** `pe_medicoes` (ciclo,
+  indicador, ano, mês, meta, realizado), `UNIQUE(indicador, ano, mês)` — a tela salva no blur,
+  então a célula é upsert. Não gravar acumulado é deliberado: seria uma segunda verdade que
+  diverge do detalhe na primeira correção de mês fechado.
+- **Ausência NÃO é zero** — a regra mais fácil de quebrar sem perceber. Meta `NULL` = "não
+  aplicável" (jan/fev antes da janela de venda); realizado `NULL` = "ainda não medido".
+  Nenhum dos dois tem atingimento nem cor. No acumulado a meta soma **só os meses com meta** e
+  o realizado soma **tudo**: vender antes da janela prometida é superação, não erro a corrigir.
+- **Velocímetro de percentuais FIXOS** (`PISO_ATENCAO`/`PISO_META`/`TETO_META`): `< 80%`
+  vermelho · `80–99,9%` laranja · `100–120%` verde · `> 120%` azul. 100 e 120 EXATOS são
+  verde. `faixa()` compara explicitamente em vez de varrer tabela de limites — com "limite
+  inferior" o 120,05 caía na faixa errada.
+- **⚠️ Estas faixas não são a régua do bônus.** `pe_indicadores.faixa_80/100/120` (decisão 22)
+  guardam os VALORES da remuneração variável, com corte seco em 80% e sem interpolação. Aqui é
+  semáforo de leitura. Se um dia tiverem de conversar, é ADR do Xayer — não refatoração de
+  passagem. Há teste percorrendo a AST de `medicao.py` pra garantir a separação.
+- **Indicador com filho é CALCULADO**: série = soma dos filhos, e `medicao_gravar` recusa
+  gravação no pai com **409** em vez de aceitar em silêncio. Sustenta a decisão do Xayer "a
+  soma das linhas de receita dá a ROL". `_series_do_objetivo` soma do nível mais fundo pro mais
+  raso (operacional → tático → estratégico).
+- **As 6 linhas de receita são doutrina** em `mapa_base.LINHAS_RECEITA`, penduradas em "ROL da
+  safra (R$)" pelo NOME (por isso `validar()` recusa tático pendurado em indicador inexistente):
+  Semente de soja · Grãos de soja · Fertilizantes e adubos · Defensivos agrícolas · Serviços de
+  beneficiamento · Prêmios, campanhas e bonificações.
+- **`_semear_taticos` preenche LACUNA, nunca sobrescreve** — e roda também em objetivo que já
+  existia, que é o que leva a abertura da ROL a um ciclo semeado antes disso. Só entra onde não
+  há **nenhum** tático; pai renomeado na tela é pulado de propósito (adivinhar erraria calado).
+- Gotchas da tela: painel alargado pra 640px (grade de 12 meses não cabe em 420); input mostra
+  número **sem separador de milhar** (o backend aceita vírgula decimal, mas "1.234" sem vírgula
+  viraria 1,234); e o balde do período carrega `faixa_rotulo` separado de `rotulo` — espalhar
+  `faixa()` cru fazia "T1" virar "na meta" na tela (bug pego na conferência, com regressão).
+
 ### Próximo passo previsto
 
 Aba de **Rituais** (reuniões de acompanhamento no modelo G4: Results mensal → FCA dos 5–7
