@@ -1,6 +1,6 @@
 ---
 name: agente-pedidos
-description: Ponte de LEITURA SoftExpert ↔ Simple Agro da Sementes Maná LTDA + painel-reais da carteira de crédito. Flask no Railway, somente leitura no SE (nada é gravado no formulário). O SE chama /pedidos-venda como Fonte de Dados REST na atividade de crédito — o agente lê o cpf_cnpj do scred via SOAP fm_ws, autentica no SA com usuário dedicado, busca pedidos Soja da safra, expande o grupo econômico pelos CNPJs do campo grupoeconomico e mapeia SA→grid SE via CAMPO_MAP (fallbacks por campo: o SA renomeia campo sem aviso). Primeiro consumidor do banco-mana com schema dedicado agente_pedidos — data lake lake-first (workflows, detalhe, totais, atividades, tempos, gaps) com fallback ao vivo. Use SEMPRE no agente-pedidos — Fonte de Dados REST do SE, CAMPO_MAP, grupo econômico, data lake, painel-reais, situação de crédito, tempos de atividade, gaps sem CRE. Também quando mencionar: /pedidos-venda, /painel-reais, /api/situacao-credito, lake-first, 452 single-session, bridge SE-SA somente leitura, /api/elegibilidade, aplicável/não aplicável, cliente fora da política de crédito.
+description: Ponte de LEITURA SoftExpert ↔ Simple Agro da Sementes Maná LTDA + painel-reais da carteira de crédito. Flask no Railway, somente leitura no SE (nada é gravado no formulário). O SE chama /pedidos-venda como Fonte de Dados REST na atividade de crédito — o agente lê o cpf_cnpj do scred via SOAP fm_ws, autentica no SA com usuário dedicado, busca pedidos Soja da safra, expande o grupo econômico pelos CNPJs do campo grupoeconomico e mapeia SA→grid SE via CAMPO_MAP (fallbacks por campo: o SA renomeia campo sem aviso). Primeiro consumidor do banco-mana com schema dedicado agente_pedidos — data lake lake-first (workflows, detalhe, totais, atividades, tempos, gaps) com fallback ao vivo. Use SEMPRE no agente-pedidos — Fonte de Dados REST do SE, CAMPO_MAP, grupo econômico, data lake, painel-reais, situação de crédito, tempos de atividade, gaps sem CRE. Também quando mencionar: /pedidos-venda, /painel-reais, /api/situacao-credito, lake-first, 452 single-session, bridge SE-SA somente leitura, /api/prioridade, alta/média/baixa/não aplicável, observação do cliente, triagem da fila de crédito.
 ---
 
 # agente-pedidos — ponte de leitura SE ↔ Simple Agro
@@ -67,21 +67,27 @@ Padrão **lake-first** em todas as leituras caras: se existe snapshot, serve do 
 | `GET /consultar-sa`, `/consultar-sa-grupo`, `/api/pedidos-sa` | senha | detalhe SE+SA de 1 workflow (lupa), com grupo econômico |
 | `GET /api/painel-bundle` | senha | payload consolidado do painel |
 | `GET/POST /api/situacao-credito` | senha | lê/grava a situação por `idprocess` (estado do agente, no banco-mana) |
-| `GET/POST /api/elegibilidade` | senha | lê/grava quem **não entra na esteira de crédito**, por `cnpj_raiz` (banco-mana) |
+| `GET/POST /api/prioridade` | senha | lê/grava **prioridade da análise + observação**, por `cnpj_raiz` (banco-mana) |
 | `GET /api/totais-financeiro`, `/api/usos-semente`, `/api/atividades`, `/api/tempos`, `/api/gaps-sem-cre` | senha | agregados do painel (lake-first) |
 | `GET /painel`, `/painel-reais` | `?senha=` | painéis HTML (somente leitura / carteira consolidada) |
 
-## Elegibilidade — quem a política tirou da esteira
+## Prioridade + Observação — a triagem da fila de crédito
 
-Nem todo cliente com pedido a prazo passa por análise de crédito: há quem, **por decisão de política**, não entra (cliente antigo, condição própria). Isso não é "reprovado" — é **não aplicável**. Sem a marcação, esses pedidos inflam o Descoberto e derrubam a Cobertura, medindo um risco que ninguém tem.
+Duas perguntas que o painel não respondia: **por onde começar** (40 CREs abertas, todas iguais na tela) e **quem nem devia estar aqui** — há cliente que, por decisão de política, não passa por análise. Enquanto esse último entrava na conta, inflava o Descoberto e derrubava a Cobertura, medindo um risco que ninguém tem.
 
-Coluna manual **Elegibilidade** no `/painel-reais`, ao lado de CPF/CNPJ, no mesmo padrão da Situação do Crédito (select por linha → POST → banco-mana).
+Coluna **Prioridade** (select) + **Observação** (texto livre) no `/painel-reais`, ao lado de CPF/CNPJ, no padrão manual da Situação do Crédito: mexeu → POST → banco-mana.
 
-- **Chave = CNPJ-raiz (8 dígitos), não `idprocess`.** A política é sobre o CLIENTE: a marcação vale pro grupo econômico inteiro, pras linhas vermelhas sem CRE (que não têm `idprocess`) e pras CREs que ele abrir depois.
-- **Default = aplicável.** A tabela `agente_pedidos.elegibilidade_credito` guarda só a exceção; voltar pra "Aplicável" **apaga a linha**.
-- **O painel abre já sem os não-aplicáveis** (filtro Elegibilidade nasce marcado em `aplicavel`) e o `✕ Limpar` volta a esse padrão, não a "mostrar tudo". Pra conferir os excluídos, marcar `Não aplicável` no filtro.
+- **Quatro níveis:** `alta` · `media` · `baixa` · `nao_aplicavel`. Não Aplicável é o fim da régua de urgência, não um eixo separado.
+- **Chave = CNPJ-raiz (8 dígitos), não `idprocess`.** A decisão é sobre o CLIENTE: vale pro grupo econômico inteiro, pras linhas vermelhas sem CRE (que não têm `idprocess`) e pras CREs que ele abrir depois.
+- **Ausência de linha = "Sem prioridade"**, que é diferente de "Média": `Alta` e *"ninguém triou ainda"* precisam ser distinguíveis, senão a coluna nasce mentindo que a carteira toda foi analisada. O filtro tem a opção pra varrer o que falta triar.
+- **Prioridade e observação na mesma linha, POST com MERGE.** A tela manda um campo só; o servidor lê o estado atual antes de gravar — senão escrever a observação zeraria a prioridade. Sem prioridade **e** sem observação → a linha é apagada.
+- **Observação não filtra e não re-renderiza** (roubaria o foco de quem está digitando na linha de baixo); prioridade re-renderiza, porque muda o recorte. Limite 500 caracteres.
+- **O painel abre sem os "Não Aplicável"** e o `✕ Limpar` volta a esse padrão, não a "mostrar tudo". Pra conferir os excluídos, marcar `Não Aplicável` no filtro.
 - **Vale pro portal inteiro** da aba Solicitações — tabela, cards de KPI, cobertura, funil/Kanban "Onde está" e Exportar Excel — porque entra no `_passaFiltros`, que é a fonte única do recorte. A aba **Indicadores (tempos) não é afetada**: ela lê o WFHISTORY, cujo universo inclui processos encerrados que a lista de abertos não conhece.
+- **Ordenação "Prioridade ▼ (Alta primeiro)"** no dropdown Ordenar, rankeando todos juntos (com e sem CRE).
 - **O rodapé da tabela avisa** quantos ficaram de fora por política. Número que encolhe sem explicação vira KPI mentiroso.
+
+**Migração 2026-08-24** (`agente_pedidos.migracoes`): a coluna anterior era binária (Elegibilidade, aplicável/não aplicável, viveu 1 dia) — quem estava `nao_aplicavel` virou **`baixa`**. Roda **uma vez**, guardada por linha de controle: sem isso todo deploy reescreveria por cima de quem fosse marcado "Não Aplicável" de novo depois. Usa `to_regclass` pra checar a tabela antiga — o `SELECT` direto numa tabela ausente abortaria a transação e deixaria a migração pendente pra sempre. A tabela antiga não é apagada.
 
 ## Variáveis de ambiente
 
