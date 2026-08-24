@@ -68,7 +68,8 @@ Padrão **lake-first** em todas as leituras caras: se existe snapshot, serve do 
 | `GET /api/painel-bundle` | senha | payload consolidado do painel |
 | `GET/POST /api/situacao-credito` | senha | lê/grava a situação por `idprocess` (estado do agente, no banco-mana) |
 | `GET/POST /api/prioridade` | senha | lê/grava **prioridade da análise + observação**, por `cnpj_raiz` (banco-mana) |
-| `GET /api/totais-financeiro`, `/api/usos-semente`, `/api/atividades`, `/api/tempos`, `/api/gaps-sem-cre` | senha | agregados do painel (lake-first) |
+| `GET /api/vencimentos` | senha | vencimento da **última parcela** por nº de pedido (lake-first) — coluna Vencimento da lupa |
+| `GET /api/totais-financeiro`, `/api/usos-semente`, `/api/vencimentos`, `/api/atividades`, `/api/tempos`, `/api/gaps-sem-cre` | senha | agregados do painel (lake-first) |
 | `GET /painel`, `/painel-reais` | `?senha=` | painéis HTML (somente leitura / carteira consolidada) |
 
 ## Prioridade + Observação — a triagem da fila de crédito
@@ -88,6 +89,15 @@ Coluna **Prioridade** (select) + **Observação** (texto livre) no `/painel-reai
 - **O rodapé da tabela avisa** quantos ficaram de fora por política. Número que encolhe sem explicação vira KPI mentiroso.
 
 **Migração 2026-08-24** (`agente_pedidos.migracoes`): a coluna anterior era binária (Elegibilidade, aplicável/não aplicável, viveu 1 dia) — quem estava `nao_aplicavel` virou **`baixa`**. Roda **uma vez**, guardada por linha de controle: sem isso todo deploy reescreveria por cima de quem fosse marcado "Não Aplicável" de novo depois. Usa `to_regclass` pra checar a tabela antiga — o `SELECT` direto numa tabela ausente abortaria a transação e deixaria a migração pendente pra sempre. A tabela antiga não é apagada.
+
+## Vencimento na lupa
+
+Coluna **Vencimento** = data da **última parcela** do pedido (quando ele termina de ser pago), não a da primeira.
+
+- **Fonte: `/api/financeiro` do agente-financeiro-sa**, casado por `order.numero` (mesma string dos dois lados) — não o `pagamento.parcelas` da listagem crua do SA, que é aninhado e a listagem trunca aninhado. O Painel Comercial SA já renderiza N parcelas desse array em produção: é a evidência de que o campo chega inteiro *por lá*, e a fonte agregada estável é o padrão da casa desde os totais de 2026-06-30.
+- **`max()` sobre data parseada**, nunca sobre string: `"01/05/2027" < "30/08/2026"` em texto, e o pedido com parcela à vista + a prazo devolveria a data errada.
+- Montado **antes** dos filtros de status/a-prazo em `_calc_totais` — a lupa mostra pedido cancelado e à vista, que também têm vencimento. `_calc_totais` retorna 4 valores.
+- Lake-first (chave `vencimentos`), no bundle **fora do gate `faltando`**. Sem o mapa a célula mostra **⏳** (reingerir o lake), não `—`; `—` é reservado pra pedido que o financeiro não conhece.
 
 ## Variáveis de ambiente
 
