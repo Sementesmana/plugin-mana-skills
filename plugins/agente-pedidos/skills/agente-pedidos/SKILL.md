@@ -90,6 +90,22 @@ Coluna **Prioridade** (select) + **Observação** (texto livre) no `/painel-reai
 
 **Migração 2026-08-24** (`agente_pedidos.migracoes`): a coluna anterior era binária (Elegibilidade, aplicável/não aplicável, viveu 1 dia) — quem estava `nao_aplicavel` virou **`baixa`**. Roda **uma vez**, guardada por linha de controle: sem isso todo deploy reescreveria por cima de quem fosse marcado "Não Aplicável" de novo depois. Usa `to_regclass` pra checar a tabela antiga — o `SELECT` direto numa tabela ausente abortaria a transação e deixaria a migração pendente pra sempre. A tabela antiga não é apagada.
 
+## Situação WF — situação da instância no SoftExpert
+
+Coluna **Situação WF**: Em andamento · Suspenso · Cancelado · Encerrado, de `WFPROCESS.FGSTATUS` (1/2/3/4).
+
+- **Vem do próprio Conjunto SCSCRED**, colada na linha do CRE (`situacao_wf` em `get_all_open_workflows_from_se`) — sem cruzamento e sem chave auxiliar. O SCSCRED já filtra `fgStatus <= 5`, então encerrado e cancelado **sempre estiveram na lista**; só faltava a coluna no SELECT: `w0_.fgStatus AS fgstatus`.
+- **Lê o código NUMÉRICO, nunca o rótulo.** O SE monta rótulo com chave de tradução (`#{103131}`) e o dataset-integration pode devolver isso cru. Código desconhecido → **""**, com log — nunca um chute.
+- **Linha sem solicitação fica em branco** (não `—`): não há workflow pra ter situação.
+- Aditivo e fail-soft: sem o campo no Conjunto, a coluna fica vazia. Exige reingestão do lake (chave `workflows`) após alterar o Conjunto.
+- **Filtro "Situação WF"** multi-seleção, sem nada marcado por padrão. Linha sem solicitação sai quando o filtro está ativo (não há workflow).
+
+⚠️ **Acrescentar a coluna na query NÃO basta.** O assistente do Conjunto separa *Construção da Query* (etapa 2) de *Campos* (etapa 3), e é a **etapa 3 que define as chaves do JSON da API**. Só na query, o campo aparece rodando o Conjunto dentro do SE e não sai pelo REST.
+
+⚠️ **"Cancelado" não aparece via `fgStatus`.** Cancelar um crédito no CRE-001 é ação dentro do fluxo: o SE grava **Encerrado (4)**, não Cancelado (3). Medido em 2026-08-26: dos 27 encerrados, **26 eram cancelamentos** e só 1 concluiu o fluxo. A aba Indicadores separa cancelados pela ação no histórico (`fgtype 9`, `nmaction ILIKE '%cancel%'`) — é lá que essa distinção existe hoje.
+
+⚠️ **`w0_.idProcess` é o número da INSTÂNCIA neste SE** (`000001`), apesar de o cabeçalho de uma das queries do vault dizer que seria o identificador do modelo. É a chave que o painel usa em tudo. Conferir contra uma linha real antes de criar Conjunto novo.
+
 ## Vencimento na lupa
 
 Coluna **Vencimento** = data da **última parcela** do pedido (quando ele termina de ser pago), não a da primeira.
