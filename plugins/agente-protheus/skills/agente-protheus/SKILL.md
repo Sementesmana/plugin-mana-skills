@@ -1,6 +1,6 @@
 ---
 name: agente-protheus
-description: Gateway REST de LEITURA do Protheus da Sementes Maná LTDA (plataforma N1, produção). Flask no Railway que conecta DIRETO no SQL Server do Protheus via pymssql (não é via SE dataset — o docstring do repo está desatualizado) e expõe datasets catalogados por HTTP: cliente (SA1010) e vendedorcliente1 (SA1010+SA3010), com estoque/pedidos/títulos como TODO. Consumido pelo SoftExpert (CORS restrito aos domínios do SE, Atividade Sistêmica) e por painéis Maná via X-API-Key ou cookie de sessão de 8h. Cache em memória por dataset+filtros com invalidação por endpoint, validação anti-injection dos códigos Protheus, headers de segurança e erro sanitizado que não expõe host nem base. Use SEMPRE no agente-protheus — adicionar dataset, cache, auth do painel, CORS do SE, conexão pymssql/FreeTDS, timeouts. Também quando mencionar: SA1010, SA3010, P12_PROD, PROTHEUS_DB_HOST, /query/<dataset>, /datasets, /vendedores, /clientes-por-vendedor, /cache/invalidar, gateway Protheus, IP shared Railway.
+description: Gateway REST de LEITURA do Protheus da Sementes Maná LTDA (plataforma N1, produção). Flask no Railway que conecta DIRETO no SQL Server do Protheus via pymssql (não é via SE dataset — o docstring do repo está desatualizado) e expõe datasets catalogados por HTTP: cliente (SA1010), vendedorcliente1 (SA1010+SA3010), baixas_pagar (SE5010+SE2010+SA2010) e baixas_receber (SE5010+SE1010+SA1010) — os dois de baixas alimentam o poller do agente-financeiro-gestao, com janela e corte em D-1; estoque/pedidos/titulos em aberto seguem como TODO. Consumido pelo SoftExpert (CORS restrito aos domínios do SE, Atividade Sistêmica) e por painéis Maná via X-API-Key ou cookie de sessão de 8h. Cache em memória por dataset+filtros com invalidação por endpoint, validação anti-injection dos códigos Protheus, headers de segurança e erro sanitizado que não expõe host nem base. Use SEMPRE no agente-protheus — adicionar dataset, cache, auth do painel, CORS do SE, conexão pymssql/FreeTDS, timeouts. Também quando mencionar: SA1010, SA3010, P12_PROD, PROTHEUS_DB_HOST, /query/<dataset>, /datasets, /vendedores, /clientes-por-vendedor, /cache/invalidar, gateway Protheus, IP shared Railway.
 ---
 
 # agente-protheus — gateway REST → Protheus (SQL Server)
@@ -21,8 +21,33 @@ O docstring do `app.py` descreve "gateway via SE Conjunto de Dados (DI006)" e li
 |---|---|---|---|
 | `cliente` | SA1010 | `PESQUISA` | COD_CLIENTE, LOJA, NOME_CLIENTE, CPF_CNPJ, EMAIL, TELEFONE, INSCRICAO_ESTADUAL, MUNICIPIO, UF |
 | `vendedorcliente1` | SA1010 + SA3010 | `PESQUISA` | idem + COD_VENDEDOR, NOME_VENDEDOR |
+| `baixas_pagar` | SE5010 + SE2010 + SA2010 | `DATA_DE`, `DATA_ATE`, `FILIAL` | o que SAIU do caixa |
+| `baixas_receber` | SE5010 + SE1010 + SA1010 | `DATA_DE`, `DATA_ATE`, `FILIAL` | o que ENTROU no caixa |
 
 Comentados como TODO: `estoque` (SB1010), `pedidos` (SC5010), `titulos_receber` (SE1010), `titulos_pagar` (SE2010). **Dataset novo entra no catálogo** — não criar rota solta.
+
+### O que os datasets de baixas ensinaram — leia antes de criar dataset novo
+
+- **Exclusão no Protheus é `D_E_L_E_T_ = ' '` (espaço)**, não `<> '*'`.
+- **Join "só pra buscar um nome" muda a contagem.** Quase toda tabela tem
+  `_FILIAL` e chave composta: a da SE2 inclui `E2_TIPO`, e o mesmo documento
+  pode existir como dois tipos. Use `OUTER APPLY ... TOP 1` para o título e
+  subconsulta escalar `TOP 1` para o cadastro. **Confira o COUNT contra a
+  tabela-base sempre que acrescentar um join** — duas violações custaram um
+  deploy cada (1222 × 1217).
+- **Nome de parceiro é a RAZÃO SOCIAL** (`A2_NOME`/`A1_NOME`), nunca
+  `E2_NOMFOR`/`E1_NOMCLI`: o relatório do Protheus imprime razão social
+  (Pergunta 30) e o `E1_NOMCLI` é char(20) com o nome da FAZENDA truncado.
+- **A regra de seleção é a do RELATÓRIO, não a do SQL óbvio.** Os três recortes
+  das baixas (`TIPODOC`, `SITUACA`, `NUMERO` preenchido) foram derivados por
+  aritmética contra a planilha, com a aba de parâmetros como especificação. O
+  porquê de cada um está no docstring da função de query — não apague.
+- **O alvo é a TELA do consumidor, não o arquivo.** O `parseBaixas` do painel
+  do financeiro descarta linha sem nome; bater com o arquivo e não com a tela
+  teria mostrado R$ 98,1 mi onde a equipe sempre viu R$ 64,9 mi.
+
+Validação: filial 0201, 01/07–24/08/2026 — pagar **1217 / R$ 64.871.478,52**,
+receber **358 / R$ 35.283.442,36**.
 
 ## Endpoints
 
