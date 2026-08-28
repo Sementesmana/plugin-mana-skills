@@ -517,6 +517,35 @@ senão a doutrina volta a morar dentro da rota).
   viraria 1,234); e o balde do período carrega `faixa_rotulo` separado de `rotulo` — espalhar
   `faixa()` cru fazia "T1" virar "na meta" na tela (bug pego na conferência, com regressão).
 
+### O cartão mede e o `⤵` desce um nível (2026-08-22, mesmo dia)
+
+- **Cartão do mapa mostra meta E medição** do indicador estratégico **principal** (o
+  primeiro por `ordem`; `_medicao_dos_nos` depende do `ORDER BY objetivo_id, nivel, ordem`,
+  onde 'estrategico' < 'operacional' < 'tatico' por alfabeto). Um cartão não cabe três
+  indicadores — os outros aparecem no painel.
+- **`medicao.resumo_ytd`: o acumulado do cartão para no MÊS CORRENTE.** É a regra que
+  impede o painel de mentir — realizado de março contra meta de doze meses reprova a
+  empresa inteira em março, e o desvio apareceria onde só há calendário. `meses_decorridos`
+  recebe `hoje` por parâmetro pro módulo seguir puro e o teste fixar a data.
+- **Clicar ≠ descer.** Clique no cartão → painel (*como evoluiu*). Botão `⤵` →
+  `/pe/<cid>/desdobrar/<oid>` (*de que é feito*). No JS do mapa o handler de clique ignora
+  `a.drill`, senão o botão abriria o painel junto com a navegação.
+- **`desdobrar` é recursiva e genérica**: sem `?pai=` mostra o tático do objetivo; com
+  `?pai=<ind>` mostra o operacional daquela linha. Serve as 4 perspectivas sem código
+  específico — CPV abre a estrutura de custo e SG&A a administrativa pelo mesmo caminho.
+- **⚠️ `?pai=` e não `/desdobrar/<oid>/<pai_id>`**: `test_acesso_pe` conta rotas × guardas
+  1:1, e dois `bp.route` numa função só quebram a contagem. O mesmo teste conta por
+  **substring** — nem docstring pode escrever o decorator do módulo estratégico por extenso
+  (quebrou a contagem na primeira tentativa desta feature).
+- **`_indicadores_medidos`** é a fonte única das séries (2 queries pro mapa inteiro, não uma
+  por cartão) e aplica a regra do pai calculado do nível mais fundo pro mais raso.
+- **CSS/JS em partials** (`_medicao_css.html`, `_medicao_js.html`) incluídos pelo mapa e pelo
+  desdobramento — duas cópias divergiriam na primeira mudança de cor, e o módulo existe pro
+  desvio se ler igual em qualquer nível. O partial exige `CID` e `ANO_INICIAL` já definidos,
+  então o include vem DEPOIS do script que os declara.
+- **`num`/`pct_texto` em `medicao.py`** como globais do Jinja: cartão renderiza no servidor,
+  painel no cliente; casa decimal diferente faz o usuário achar que um dos dois erra.
+
 ### Próximo passo previsto
 
 Aba de **Rituais** (reuniões de acompanhamento no modelo G4: Results mensal → FCA dos 5–7

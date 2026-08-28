@@ -154,7 +154,7 @@
       "name": "agente-governanca",
       "source": "./plugins/agente-governanca",
       "description": "Plataforma de Governança por Processo da Sementes Maná — app Flask+PG (schema governanca)+Railway onde as áreas constroem a governança de cada processo em wizard guiado (SIPOC, tartaruga de 2 níveis, IC×IV Falconi, riscos↔controles N:N, requisitos auditáveis, versionamento AS IS→TO BE) e a plataforma gera o .bpmn no dialeto SoftExpert. Inclui o módulo de PLANEJAMENTO ESTRATÉGICO (método Antônio Napoli em 10 etapas) e o Maná Results — mapa estratégico BSC nas 4 perspectivas, com desdobramento estratégico→tático→operacional, e a MEDIÇÃO do indicador: grade mensal de meta e realizado, acumulado trimestral/semestral por soma, meta não-aplicável distinta de zero e velocímetro de faixas fixas (80/100/120), com o indicador-pai calculado a partir das suas linhas.",
-      "version": "1.4.0",
+      "version": "1.5.0",
       "author": {
         "name": "Sementes Mana LTDA"
       }
@@ -252,7 +252,7 @@
     {
       "name": "agente-protheus",
       "source": "./plugins/agente-protheus",
-      "description": "Gateway REST de LEITURA do Protheus da Sementes Maná LTDA (plataforma N1, produção). Flask no Railway que conecta DIRETO no SQL Server do Protheus via pymssql (não é via SE dataset — o docstring do repo está desatualizado) e expõe datasets catalogados por HTTP - cliente (SA1010) e vendedorcliente1 (SA1010+SA3010), com estoque/pedidos/títulos como TODO. Consumido pelo SoftExpert (CORS restrito a sementesmana.softexpert.app e -test, Atividade Sistêmica) e por painéis Maná via X-API-Key ou cookie de sessão de 8h...",
+      "description": "Gateway REST de LEITURA do Protheus da Sementes Maná LTDA (plataforma N1, produção). Flask no Railway que conecta DIRETO no SQL Server do Protheus via pymssql (não é via SE dataset — o docstring do repo está desatualizado) e expõe datasets catalogados por HTTP - cliente (SA1010), vendedorcliente1 (SA1010+SA3010), baixas_pagar (SE5010+SE2010+SA2010) e baixas_receber (SE5010+SE1010+SA1010) — os dois de baixas alimentam o poller do agente-financeiro-gestao, com janela e corte em D-1; estoque/pedidos/títulos em aberto seguem como TODO. Consumido pelo SoftExpert (CORS restrito a sementesmana.softexpert.app e -test, Atividade Sistêmica) e por painéis Maná via X-API-Key ou cookie de sessão de 8h...",
       "version": "1.0.1",
       "author": {
         "name": "Sementes Mana LTDA"

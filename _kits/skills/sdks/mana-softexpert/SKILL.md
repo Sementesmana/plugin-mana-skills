@@ -2,15 +2,17 @@
 name: mana-softexpert
 description: >-
   SDK Camada 2A da Maná Builder — ESCRITA no SoftExpert Workflow via wf_ws.
-  Use SEMPRE que um agente/app precisar: instanciar processo no SE
-  (newWorkflow), preencher formulário (editEntityRecord — campos texto/opção
-  E campo tipo ARQUIVO via EntityAttributeFileList), anexar documento em
-  atividade (newAttachment, ATV-XX habilitada), ou cancelar instância
-  (cancelWorkflow). Instalar via pip git+tag em vez de copiar bloco SOAP.
+  Use SEMPRE que um agente/app precisar: instanciar processo no SE já com o
+  formulário preenchido (newWorkflowEditData — o único que aceita UserID) ou
+  vazio (newWorkflow), preencher formulário depois (editEntityRecord — campos
+  texto/opção E campo tipo ARQUIVO via EntityAttributeFileList), anexar
+  documento em atividade (newAttachment, ATV-XX habilitada), ou cancelar
+  instância (cancelWorkflow). Instalar via pip git+tag em vez de copiar SOAP.
   Também quando mencionar: escrever no SE, criar solicitação de crédito por
   API, endosso, popular scred/contapagar/formscpr, campo arquivo do
   formulário, termoanuencia, anexar na ATV-01, sessão SOAP persistente,
-  wsdl session viva, code -5 processo não encontrado, SoftExpertError,
+  wsdl session viva, code -5 processo não encontrado, code -9 workflow não
+  encontrado, instanciar em nome de outro usuário, SoftExpertError,
   mana-softexpert. A skill softexpert-wf-ws é a documentação dos 23 métodos;
   este SDK é o código pronto dos 5 de escrita mais usados.
 ---
@@ -24,7 +26,7 @@ description: >-
 ## Instalação (requirements.txt do agente)
 
 ```
-mana-softexpert @ git+https://github.com/Sementesmana/mana-softexpert.git@v0.1.0
+mana-softexpert @ git+https://github.com/Sementesmana/mana-softexpert.git@v0.2.0
 ```
 
 ## Setup (1× por agente — env vars no Railway)
@@ -36,30 +38,42 @@ from mana_softexpert import SoftExpertWF, SoftExpertError
 se = SoftExpertWF(
     base_url=os.environ["SE_URL"],
     api_key=os.environ["SE_API_KEY"],
-    user_id=os.environ.get("SE_USER_ID", ""),   # matrícula do executor
+    user_id=os.environ.get("SE_USER_ID", ""),   # matrícula de quem INSTANCIA
 )
 ```
 
 ## Receita completa (padrão endosso → CRE-001)
 
 ```python
-# 1. instanciar → SALVAR o idprocess IMEDIATAMENTE (amarre + retry idempotente)
-idp = se.new_workflow("SM.CV.PR.NE.CRE-001", f"ENDOSSO - {cliente} - {revenda}")
+# 1. instanciar JÁ preenchido (campos + campo ARQUIVO) → 1 chamada, transacional
+#    SALVAR o idprocess IMEDIATAMENTE (amarre + retry idempotente)
+idp = se.new_workflow_edit_data(
+    "SM.CV.PR.NE.CRE-001", f"ENDOSSO - {cliente} - {revenda}", "scred",
+    {"nomeclientenovo": nome, "uf": uf, ...},                    # vazios são filtrados
+    arquivos=[("termoanuencia", "termo.pdf", pdf_bytes)])
 db.execute("UPDATE endossos SET idprocess=%s WHERE id=%s", [idp, eid])
 
-# 2. formulário (uma chamada, campos vazios são filtrados)
-se.edit_form(idp, "scred", {"nomeclientenovo": nome, "uf": uf, ...})
-
-# 3. campo tipo ARQUIVO do formulário
-se.edit_form_arquivo(idp, "scred", "termoanuencia", "termo.pdf", pdf_bytes)
-
-# 4. anexos da atividade (1 por chamada; sessão persistente barateia)
+# 2. anexos da atividade (1 por chamada; sessão persistente barateia)
 for doc in docs_pendentes:
     se.anexar(idp, "ATV-01", doc.filename, doc.bytes)
     marcar_anexado(doc)   # retry anexa só o que faltou
 
-# 5. excluir no app → cancela no SE (WS não exclui)
+# 3. excluir/desfazer no app → cancela no SE (WS não exclui)
 se.cancel_workflow(idp, "excluído pelo painel")
+```
+
+## ⚠️ Instanciar em nome de OUTRA pessoa: use `newWorkflowEditData`
+
+Só três métodos aceitam `UserID`: `newWorkflow`, `newWorkflowEditData` e `newAttachment`.
+O **`editEntityRecord` NÃO aceita** — age sempre como o dono do `SE_API_KEY`. Então:
+
+```python
+# ❌ quebra quando SE_USER_ID != dono do token
+idp = se.new_workflow(proc, titulo)        # nasce da Lorena — ok
+se.edit_form(idp, "scred", campos)         # pergunta como Xayer → code=-9
+
+# ✅ cria e preenche na mesma identidade
+idp = se.new_workflow_edit_data(proc, titulo, "scred", campos, arquivos=[...])
 ```
 
 ## Erros
@@ -69,6 +83,7 @@ se.cancel_workflow(idp, "excluído pelo painel")
 | Code | Causa provável |
 |---|---|
 | `-5` processo não encontrado | ProcessID errado OU usuário sem permissão de INSTANCIAR (lista escopada) OU **vírgula/espaço colado no valor da env** |
+| `-9` workflow não encontrado | O workflow EXISTE, mas fora do escopo de quem perguntou — clássico do `editEntityRecord` num processo instanciado em nome de outro `UserID`. Use `new_workflow_edit_data` (2026-08-27, agente-comercio-revendas) |
 | anexo falha | atividade não HABILITADA (anexo é da atividade, não da instância) |
 
 ## Regras que o SDK já cumpre por você
