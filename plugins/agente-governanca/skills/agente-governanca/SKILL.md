@@ -688,6 +688,28 @@ em vez de desvincular calado). E a **função do cargo vem do catálogo AD002**
 é a mesma função. Mesmo princípio do de-para por parêntese na precificação: só casa o que o
 cadastro declara.
 
+## Inventário: editar e excluir (2026-08-29 — lote 1: "onde tem inserção, tem editar e excluir")
+
+Rotas `POST /processos/<pid>/editar|excluir` e `POST /macroprocessos/<mid>/editar|excluir`,
+todas `@exige_login("gestor")` — dono_processo não alcança. Na home, cada linha do inventário
+alterna leitura/edição por CSS+checkbox (sem JS): identificador, nome, resumo, macroprocesso,
+área e prioridade.
+
+- **Excluir processo leva TUDO**: `processo_versoes.processo_id` é ON DELETE CASCADE e a versão
+  cascateia em ~18 tabelas. Não existe "excluir só o processo" — ou vai tudo, ou não vai. A
+  decisão do Xayer (24/08) foi **permitir, com aviso do que vai embora**: a confirmação conta
+  versões, atividades e riscos, com os números vindos da **mesma query que monta a lista** (de
+  outra fonte, o aviso divergiria do que a tela mostra).
+- **Macroprocesso é o caso oposto:** `processos.macroprocesso_id` **não** é cascata — ou se
+  recusa com o motivo, ou o banco estoura na cara do usuário. Desvincular em silêncio seria
+  pior: o agrupamento início-ao-fim sumiria sem rastro.
+- **Os `<form>` ficam FORA da tabela** e os campos se ligam a eles por `form="fp<id>"`: form que
+  abre numa `<td>` e fecha em outra é HTML inválido — o navegador o retira da tabela e os campos
+  param de enviar, calados.
+- `_volta_home(erro)` devolve o motivo numa faixa no topo da home. Sem ela, "não excluí porque 3
+  processos ainda estão no macro" seria uma lista que voltou igual.
+- 11 testes em `tests/test_inventario.py`. Suíte em 459.
+
 ## Roadmap restante (blueprint)
 F5: cargas SE (GRC/CPM/ECM/Competências via MCP/SOAP) + instanciar workflow.
 F6: construtores de governança (políticas, POPs gerados das atividades, espec. formulário
