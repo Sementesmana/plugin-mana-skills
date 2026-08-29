@@ -710,6 +710,36 @@ alterna leitura/edição por CSS+checkbox (sem JS): identificador, nome, resumo,
   processos ainda estão no macro" seria uma lista que voltou igual.
 - 11 testes em `tests/test_inventario.py`. Suíte em 459.
 
+## Lote 2: excluir ciclo, excluir versão, editar item (2026-08-29)
+
+Segundo lote da diretriz *onde tem inserção, tem editar e excluir*.
+
+- **Excluir ciclo do planejamento** — `POST /pe/<cid>/excluir`, `@exige_pe()` + `_eh_condutor`
+  (quem participa contribui, quem **conduz** decide — mesma régua de `consolidar` e `semear`).
+  As **22 FKs** que apontam para `pe_ciclos` são todas ON DELETE CASCADE: vão junto objetivos,
+  indicadores, medições, coleta individual, histórico de entrevista e as setas do mapa. A
+  confirmação conta objetivos, indicadores, medições, sócios e escolhas — números vindos de
+  `_lista_render()`, a mesma query que monta a tela.
+- **Excluir versão do processo** — `POST /cockpit/versao/<vid>/excluir`, gestor+ com guarda de
+  área (a fila da tela já filtra, mas o POST não é a tela). **A versão VIGENTE não se exclui**
+  (decisão 8: vigente é imutável e é a governança publicada) — a tela não mostra o botão e a
+  rota recusa com o motivo; para tirá-la do ar, publica-se outra no lugar (que marca a
+  anterior como obsoleta) ou exclui-se o processo inteiro.
+- **Editar item do wizard** — `GET` e `PATCH /api/versao/<vid>/itens/<tabela>/<iid>`, com a
+  **mesma whitelist do criar** (`TABELAS`) **menos as colunas de VÍNCULO**: `atividade_id` não
+  se edita, senão o item mudaria de dono em silêncio (quem quer mudar de atividade apaga e cria
+  do outro lado). Campo vazio vira NULL, como no `criar_item`. Coluna fora da whitelist é
+  ignorada **em silêncio de propósito** — recusar a requisição inteira por um campo a mais
+  transformaria qualquer evolução da tela em erro na cara do usuário. E o PATCH **não** reescreve
+  a biblioteca: `_upsert_biblioteca` roda na criação, quando o item nasce.
+- **O ✎ é injetado, não escrito à mão.** `base.html` varre no `DOMContentLoaded` os botões que já
+  chamam `delItem(vid,'tabela',id)` e insere ao lado um ✎ que abre um editor genérico — são ~25
+  listas hoje, e lista nova ganha edição de graça. As colunas do modal vêm do **servidor**
+  (`colunas` da resposta do GET); whitelist repetida no cliente vira uma segunda verdade, e a que
+  diverge é sempre a que ninguém está olhando. O valor entra por propriedade (`.value = txt`),
+  não por HTML — aspas e `<` no dado não quebram a tela.
+- 16 testes em `tests/test_lote2_editar_excluir.py`; suíte em **475**.
+
 ## Roadmap restante (blueprint)
 F5: cargas SE (GRC/CPM/ECM/Competências via MCP/SOAP) + instanciar workflow.
 F6: construtores de governança (políticas, POPs gerados das atividades, espec. formulário
