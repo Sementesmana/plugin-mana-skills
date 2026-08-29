@@ -1,0 +1,28 @@
+# Normalização de fim de linha — mata os "diff fantasma" de CRLF.
+# Regra: no repositório o texto é SEMPRE LF; na máquina cada um vê o que o
+# sistema dele usa (CRLF no Windows). O git converte na entrada e na saída,
+# então trocar de editor/ferramenta nunca mais gera diff sem mudança de conteúdo.
+* text=auto
+
+# Binários — nunca converter (corromperia o arquivo)
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.webp binary
+*.ico  binary
+*.pdf  binary
+*.zip  binary
+*.rar  binary
+*.7z   binary
+*.docx binary
+*.xlsx binary
+*.pptx binary
+*.mp3  binary
+*.mp4  binary
+*.wav  binary
+*.ogg  binary
+*.ttf  binary
+*.otf  binary
+*.woff binary
+*.woff2 binary
