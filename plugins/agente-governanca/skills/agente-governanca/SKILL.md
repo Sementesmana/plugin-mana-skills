@@ -740,6 +740,44 @@ Segundo lote da diretriz *onde tem inserção, tem editar e excluir*.
   não por HTML — aspas e `<` no dado não quebram a tela.
 - 16 testes em `tests/test_lote2_editar_excluir.py`; suíte em **475**.
 
+## Lote 3: os cadastros que só sabiam inserir (2026-08-29)
+
+Fecha a diretriz *onde tem inserção, tem editar e excluir* nos cadastros. A regra que atravessa
+todos: **exclusão que o banco recusaria vira recusa explicada na tela** — `riscos.biblioteca_id`,
+`area_funcao.funcao_id`, `cargos_funcoes.funcao_id` e `af_itens.catalogo_id` referenciam **sem**
+cascata; apagar em uso estouraria erro cru, e desligar em silêncio seria pior (o vínculo sumiria
+sem ninguém pedir).
+
+- **Bibliotecas** (`/bibliotecas`) — linha editável e × por item. Excluir só o que tem `usos = 0`;
+  a tela nem mostra o botão quando há uso, e a rota recusa com o número. Renomear é seguro: as
+  instâncias apontam por `biblioteca_id`, não por texto.
+- **Função do catálogo AD002** (`/org`) — editar identificador, nome e nível; remover só quando
+  não há **par área×função** nem **cargo** apontando (`n_areas` e `n_cargos` na mesma query que
+  monta a lista).
+- **Item do catálogo organizacional** — editar nome/ordem e remover, com recusa quando está em
+  `af_itens` (o mapeamento consolidado do par).
+- **Colaborador** (`/admin`) — agora se edita nome, e-mail, perfil, área, cargo e, opcionalmente,
+  a senha. Três travas: e-mail repetido é recusado com frase; **senha em branco não troca a
+  senha** (campo vazio = "não mexi nisso"); e **o último admin ativo não pode ser rebaixado** —
+  rebaixá-lo trancaria todo mundo do lado de fora e o conserto seria no banco. **Excluir
+  colaborador não existe de propósito**: ele assina histórico (eventos de status, contribuições
+  da coleta, autoria de melhoria) — quem sai é *desativado*.
+- **Documento** — botão "× excluir documento" na tela do editor, que apaga o documento e as
+  seções (`doc_secoes` é cascata) e **volta pra revisão**: o genérico responde JSON, e quem apaga
+  o que estava escrevendo ficaria olhando a própria página apagada.
+- **Recomeçar conversa** nas duas entrevistas (`/versao/<vid>/entrevista` e
+  `/pe/<cid>/entrevista`) — apaga **só o fio do chat**. O que o copiloto já aplicou (atividade,
+  SIPOC, decisão, oportunidade; sócios, arena, escolhas) **fica**: "começar de novo" não quer
+  dizer desfazer trabalho aprovado. No PE, cada um limpa o **seu** fio (a coleta individual é
+  sigilosa) e o fio do **grupo** só o condutor limpa. Teste extrai os alvos de todo `DELETE FROM`
+  do corpo e exige que sejam só as tabelas de mensagem.
+- 16 testes em `tests/test_lote3_cadastros.py`; suíte em **491**.
+
+**Fica de fora, e é decisão pendente:** *desfazer a importação de estoque*. Hoje não há como
+saber quais linhas de `pe_medicoes` vieram da importação — `origem` já é a **dimensão** da venda
+(direta × via agente), não procedência. Marcar procedência é coluna nova e muda o grão da
+tabela: é ADR, não conserto de passagem.
+
 ## Roadmap restante (blueprint)
 F5: cargas SE (GRC/CPM/ECM/Competências via MCP/SOAP) + instanciar workflow.
 F6: construtores de governança (políticas, POPs gerados das atividades, espec. formulário
