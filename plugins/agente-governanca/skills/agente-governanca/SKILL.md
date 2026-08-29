@@ -1,6 +1,6 @@
 ---
 name: agente-governanca
-description: Plataforma de Governança por Processo da Sementes Maná — Flask+PG (schema governanca)+Railway: as áreas constroem a governança de cada processo em wizard guiado (SIPOC, tartaruga de 2 níveis, IC×IV Falconi, riscos↔controles N:N, requisitos auditáveis, versionamento AS IS→TO BE) e a plataforma gera o .bpmn no dialeto SoftExpert. Inclui o módulo de PLANEJAMENTO ESTRATÉGICO (Maná-Estratégia, método Antônio Napoli em 10 etapas, tabelas pe_*, coleta individual antes da reunião, acesso FECHADO por padrão via colaboradores.acesso_pe, lido do banco a cada request) e o Maná Results (mapa estratégico BSC, semeadura idempotente, desdobramento estratégico→tático→operacional), mais importador Bizagi/BPMN, organograma gráfico, agenda com .ics e construtor de documentos. Use SEMPRE no agente-governanca. Também quando mencionar: Maná Mapeia, Maná-Estratégia, Maná Results, mapa estratégico, BSC, RFL, tartaruga, requisito auditável, dialeto BPMN SE, pe_ciclos, acesso_pe, método Napoli, cockpit.
+description: Plataforma de Governança por Processo da Sementes Maná — Flask+PG (schema governanca)+Railway: as áreas constroem a governança de cada processo em wizard guiado (SIPOC, tartaruga de 2 níveis, IC×IV Falconi, riscos↔controles N:N, requisitos auditáveis, versionamento AS IS→TO BE) e a plataforma gera o .bpmn no dialeto SoftExpert. Inclui o módulo de PLANEJAMENTO ESTRATÉGICO (Maná-Estratégia, método Antônio Napoli em 10 etapas, tabelas pe_*, coleta individual antes da reunião, acesso FECHADO por padrão via colaboradores.acesso_pe, lido do banco a cada request) e o Maná Results (mapa estratégico BSC, semeadura idempotente, desdobramento estratégico→tático→operacional), mais importador Bizagi/BPMN, organograma gráfico, agenda com .ics e construtor de documentos. Use SEMPRE no agente-governanca. Também quando mencionar: Maná Mapeia, Maná-Estratégia, Maná Results, mapa estratégico, BSC, RFL, tartaruga, requisito auditável, dialeto BPMN SE, pe_ciclos, acesso_pe, método Napoli, cockpit, medição, velocímetro, pe_medicoes, meta × realizado, dimensão canal/condição/origem, tipo de medida e de ligação, ticket médio, importar estoque, desdobramento até cultivar.
 ---
 
 # agente-governanca — Plataforma de Governança por Processo
@@ -421,10 +421,31 @@ O que **não** se "arruma" sem falar com o Xayer — cada item tem teste:
   usam essa sigla.
 - **Geração de caixa é o fim da linha**: recebe seta e **não emite nenhuma**. Nó de caixa
   saindo = alguém inverteu a causalidade do mapa.
-- **Ordem da cadeia da safra** (correção explícita do Xayer): planejamento → cooperados →
-  logística interna → **UBS (beneficiamento/armazenagem) → comercialização → expedição**.
-  Vende depois de beneficiar; expede depois de vender.
-- **Marketing é faixa transversal** (`formato='faixa'`), não etapa: permeia o ciclo inteiro.
+- **Ordem da cadeia da safra** (correção explícita do Xayer): planejamento ① → **marketing ②**
+  → cooperados ③ → logística interna ④ → **UBS ⑤ → comercialização ⑥ → expedição ⑦**.
+  Vende depois de beneficiar; expede depois de vender. Os números são o campo `passo`, que o
+  cartão mostra num selo — numerados **por bloco**, não por perspectiva (só a cadeia da safra
+  e a perspectiva de clientes são filas; o apoio não é).
+- **Marketing é ETAPA** (passo ②), não faixa transversal — mudou em 2026-08-23. O que decidiu
+  foram os indicadores que ele já carregava (leads por canal, CAC, conversão
+  lead→oportunidade): geração de demanda tem entrada e saída. É ramo **paralelo** ao campo —
+  `planejamento → marketing → comercialização` de um lado, `planejamento → cooperados` do
+  outro. Marketing entrega funil, não bag.
+- **O portão do crédito** (correção do Xayer): a cadeia física NÃO vai do pedido ao caminhão.
+  `comercialização → crédito → faturamento → expedição`. Crédito é barreira antes de
+  **faturar**, não antes de comercializar — o pedido nasce primeiro. A seta atravessa os três
+  blocos de propósito: a cadeia física para e espera a esteira financeira.
+- **Posição no tempo ≠ bloco de competência.** O crédito acontece no meio da cadeia física e
+  continua sendo competência FINANCEIRA: o critério é qual linha da DRE o processo move (ele
+  produz spread preservado → RFL), não quando ele acontece. Mover o nó de bloco para "arrumar"
+  o desenho quebraria o corte Falconi inteiro.
+- **A comercialização é P6, não P5** (renumerada em 2026-08-23 quando o marketing entrou como
+  etapa ②; o Xayer liberou os códigos). O P5 hoje é a **UBS**, e a esteira financeira desceu
+  para P8..P11. Texto antigo que diz "o P5" está falando da comercialização.
+- **Perspectiva de clientes é o ciclo de vida do cliente**, na ordem ①cliente certo/carteira →
+  ②mix e preço → ③entrega e qualidade → ④recompra → ⑤share. Estava invertida até 2026-08-23 e
+  contradizia o próprio P6, onde a primeira das quatro condições da venda é o cliente que paga.
+  Códigos C1..C5 acompanham a cadeia.
 - **Crédito, cobrança, barter e mesa são processos de NEGÓCIO** da competência financeira —
   não apoio. O critério é "produz resultado que a estratégia conta?", **não** "está no
   EBITDA?" — a competência financeira mora depois do EBITDA por definição, então esse teste
@@ -551,6 +572,121 @@ senão a doutrina volta a morar dentro da rota).
 Aba de **Rituais** (reuniões de acompanhamento no modelo G4: Results mensal → FCA dos 5–7
 desvios → Comitê de Receita 3×/semana → dailies → S&OP → Direx/Comex), reusando `pe_ritos` e
 o módulo `/agenda` com feed `.ics`. O mapa é o que define os indicadores que os ritos cobram.
+
+## Dimensões, medidas e ligações — a cadeia comercial (2026-08-23, ADR)
+
+Módulo puro novo: `app/dimensoes.py` (sem banco, sem request — mesma linha de
+`medicao`/`mapa_base`). O mapa deixou de só somar.
+
+- **A regra que decide onde o dado mora:** *o que é intrínseco à COISA vai na árvore; o que é
+  intrínseco à VENDA vai na medição.* Dimensões (colunas de `pe_medicoes`): `canal`
+  (agricultor · multiplicador · distribuidor, todos com `gera_receita=True` — multiplicador é
+  venda, não transferência interna), `condicao_pagto` (à vista × a prazo) e `origem` (venda
+  direta × via agente de venda: é **uma comissão × duas**, não "interno × externo" — o RC está
+  sempre lá). `dimensoes.COLUNAS` é a fonte única: rota, JS do painel e importação leem dali,
+  então dimensão nova entra sem passar por essas funções (foi assim que `origem` entrou).
+- **`NOT NULL DEFAULT ''`, nunca `NULL`** — `NULL <> NULL` em índice único deixaria duplicata
+  entrar sem o banco reclamar. `''` significa *sem discriminação*. **Invariante, barrada com
+  409 na gravação:** para o mesmo (indicador, ano, mês, medida) **ou** existe a linha `''`
+  **ou** existem as discriminadas — nunca as duas (senão "todos" soma total + partes e dobra o
+  faturamento, com os dois números plausíveis). Índice:
+  `ux_pe_medicoes(indicador_id, ano, mes, medida, canal, condicao_pagto, origem)`.
+- **Três tipos de MEDIDA** (`pe_indicadores.tipo_medida`): `aditiva` · `razao` (NUNCA soma —
+  ticket médio, taxa de conversão, todo %) · `formula` (`valor = volume × ticket`). **Três
+  tipos de LIGAÇÃO** (`tipo_ligacao`, mora no FILHO porque descreve a relação dele com o pai):
+  `soma` · `formula` · **`direcionador`** — o filho *explica* o pai e o motor o **ignora ao
+  somar** (o funil pendura no volume; lead não é bag).
+- **`medida` é COLUNA, não indicador irmão**: `valor` (R$, universal), `volume` (bag) e
+  `ticket` (R$/bag) — os dois últimos só do nó *Semente de soja* pra baixo, e lá `valor` deixa
+  de ser digitável. **Medida nomeada só sobe se TODOS os filhos que a compõem tiverem** — é o
+  que impede bag de vazar pra Receita bruta e o ticket de virar R$ de fertilizante ÷ bag de
+  semente. Um indicador por medida dobraria as 40 cultivares para 80.
+- **`sinal` (+1/−1)** resolve dedução como filha normal da árvore de soma: **ROL = receita
+  bruta − deduções**. Sem esse andar, `volume × ticket` bateria contra número que já tem
+  imposto descontado.
+- **`espelha_id` / `espelha_medida` — uma árvore, duas leituras.** O "Volume vendido (bag)" do
+  P5 não tem série própria: lê a medida `volume` do nó *Semente de soja*, na árvore da ROL.
+  `_seguir_espelho` traz a árvore do espelhado; alvo não encontrado deixa o espelho
+  **desligado** de propósito (cartão vazio se explica; cartão com número de outro ramo não). O
+  nó espelhado NÃO entra como linha extra — o cabeçalho da tela já é ele.
+- **`direcao` + `tolerancia`** (`maior_melhor` | `menor_melhor` | `estabilizar`): sem isso CPV,
+  inadimplência, prazo e desconto aparecem VERDES justamente quando vão mal, e o consolidado do
+  objetivo inverte sem estourar. **`peso`** (indicador e objetivo) → `medicao.consolidado`:
+  parcela sem atingimento **sai da conta e os pesos renormalizam** (zero seria inventar
+  desvio), peso ≤ 0 também sai, e cada parcela tem **teto de 120%** (`TETO_PARCELA`) — as
+  condições de um objetivo são simultâneas, superação não paga falha alheia.
+- **`nivel` é RÓTULO; a hierarquia real é `pai_id`** e a agregação soma **da profundidade maior
+  para a menor** (portfólio e obtentora dividem `tatico`). Somar por rótulo fazia o portfólio
+  nunca receber a soma das obtentoras — número errado, sem erro.
+- **A razão do pai pondera pelo PAR CASADO**, célula a célula (mês × dimensão): só entra o
+  filho que tem as **duas** parcelas. Vale em três lugares, porque o erro tinha três portas:
+  `agregar_pai` (série do pai), `_razao_pares` (acumulado no tempo) e o espelho. Caso real: 7
+  cultivares com meta de volume e 4 com meta de ticket deram um ticket-meta **abaixo das quatro
+  metas existentes** — média ponderada mora entre o menor e o maior do que ela pondera.
+- **Migração embutida na semeadura** (tudo idempotente): **adota andar** (as 6 linhas de
+  receita passam pra baixo de *Receita bruta* — sem adotar, criaria seis irmãs novas e a ROL
+  contaria o faturamento duas vezes), **realinha doutrina** (`medidas`, `sinal`, `tipo_ligacao`
+  em nó que já existe, preservando nome/unidade/ordem, que são conteúdo do usuário) e **cria
+  indicador estratégico em objetivo que já existe** (o beco que travou as linhas de receita em
+  22/08). Aposentadoria só de `INDICADORES_APOSENTADOS`, e só sem medição e sem filho.
+
+## Realizado ligado na fonte — passo 2 (2026-08-24→27, ADR 2026-08-29)
+
+`POST /api/pe/<cid>/medicoes/importar-estoque` (só o condutor). Três módulos **PUROS** recebem
+o payload e devolvem consolidado + relatório; a rota só faz o GET e a gravação.
+
+- **Cada pergunta tem um dono, e o dono é LIDO — não reimplementado:**
+  `estoque_sa.py` ← `GET /api/estoque` do **agente-estoque** (bags por cultivar; ele já
+  autentica no SA e converte embalagem → bag) · `financeiro_sa.py` ← `/api/dataset` do
+  **agente-financeiro-sa** (receita e ticket realizados) · `preco_meta.py` ← SQL direto no
+  schema `precificacao` do mesmo banco (a **meta** do ticket). Não falar com o Simple Agro
+  daqui é decisão: duas contas de bag divergem no primeiro pedido com embalagem nova, e o
+  ticket precisa ser razão da **mesma** fonte (receita ÷ bags do painel comercial).
+- **Meta do volume = estoque + compra − qualidade, inteira no MÊS 1** — o disponível para
+  vender. Estoque não tem mês: é meta de **safra**. Daí a visão **`anual`** em
+  `medicao.PERIODOS` (um balde com os 12 meses): é a única em que meta de safra e realizado se
+  comparam sem ressalva; a grade avisa na tela que a meta é da safra e não do mês.
+- **Meta do ticket = tabela de preço, em três recortes que são doutrina** (`preco_meta.py`):
+  **tier `ALTO`** (é a medalha *Ouro* do painel de precificação; `cultivares.tier` só aceita
+  ALTO/MEDIO/BAIXO — procurar por `'ouro'` leu 25.914 linhas e casou **zero** em 24/08),
+  **estado `GOIAS` por extenso** (sigla não casa; aproximação consciente por causa do ICMS) e o
+  preço **À VISTA, inteiro no mês 1** (o à vista é a base da tabela; os meses são base + juro, e
+  o juro já tem lugar próprio na dimensão `condicao_pagto` — embutido na meta, a meta subiria
+  junto com o prazo concedido, e metas em meses diferentes deixariam `valor = volume × ticket`
+  ausente em TODO mês). Consequência assumida: venda a prazo tende a ficar ACIMA da meta.
+- **`variantes()` é a única licença pra casar nome:** a precificação escreve o código do ERP
+  **entre parênteses** quando difere do nome comercial (`'NEO690 I2X (690 I2X)'`) — o parêntese
+  é o de-para declarado pelo cadastro. Nada de similaridade.
+- **Cultivar sem preço fica SEM meta, nunca zero** — zero pintaria de vermelho quem não tem
+  promessa (mesma doutrina do N/A ≠ zero).
+- **A importação roda inteira ou não roda:** célula já lançada **discriminada** é pulada e
+  reportada (total + detalhe no mesmo mês contaria o bag duas vezes); o relatório separa **bags
+  LIDOS de bags GRAVADOS** — a diferença é o volume que não subiu pra receita de ninguém
+  (relatar só o lido fez a 1ª importação parecer completa com duas cultivares fora); e **não se
+  inventa canal** (`uso_semente` traz AGRICULTOR e DISTRIBUIÇÃO; o multiplicador não apareceu
+  em pedido nenhum — os usos voltam no relatório com os bags pra confirmação). Fonte fora do ar
+  devolve **502 com a URL da fonte**, sem gravar parcial.
+- **Candidatos da gravação:** folha operacional (`NOT EXISTS` filho) que **declare** `volume` em
+  `medidas` — pai é calculado, e bag em nó que não carrega bag não sobe pra lugar nenhum.
+- **Leitura isolada — uma unidade por tela:** `_cartao(i, principal)` zera `medidas` no cartão
+  do desdobramento (R$ entrando pela financeira, bag entrando pelo comercial: mesmo nó, mesma
+  árvore, leitura diferente). Misturar unidade na linha é o caminho pra somar bag com tonelada.
+- **Rotas do desdobramento:** `/pe/<cid>/desdobrar/<oid>` (recursiva, `?pai=`, `?medida=`),
+  `GET /api/pe/<cid>/indicador/<iid>`, `POST /api/pe/<cid>/indicador/<iid>/medicoes`,
+  `POST /api/pe/<cid>/objetivo/<oid>/semear-taticos`. Todas `@exige_pe()` — `test_acesso_pe`
+  conta rotas × guardas por **substring**.
+- **Env novas (com default):** `ESTOQUE_URL`/`ESTOQUE_TIMEOUT` e
+  `FINANCEIRO_URL`/`FINANCEIRO_TIMEOUT`.
+- **Portfólio:** Golden Harvest entrou em 24/08 no **portfólio de terceiros**
+  (`mapa_base.OBTENTORAS_TERCEIROS`) — 6 obtentoras, 40 cultivares.
+
+## Cadastros do `/admin` (2026-08-27)
+
+Editar e excluir **área** e **cargo**, com trava contra exclusão em cascata (recusa com motivo
+em vez de desvincular calado). E a **função do cargo vem do catálogo AD002**
+(`cargos_funcoes.funcao_id` → `funcoes`), não de casar texto por semelhança — nome parecido não
+é a mesma função. Mesmo princípio do de-para por parêntese na precificação: só casa o que o
+cadastro declara.
 
 ## Roadmap restante (blueprint)
 F5: cargas SE (GRC/CPM/ECM/Competências via MCP/SOAP) + instanciar workflow.
