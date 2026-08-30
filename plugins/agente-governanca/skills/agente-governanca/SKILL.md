@@ -423,6 +423,8 @@ O que **não** se "arruma" sem falar com o Xayer — cada item tem teste:
   saindo = alguém inverteu a causalidade do mapa.
 - **Ordem da cadeia da safra** (correção explícita do Xayer): planejamento ① → **marketing ②**
   → cooperados ③ → logística interna ④ → **UBS ⑤ → comercialização ⑥ → expedição ⑦**.
+  *(Superado em 29/08: o **laboratório** entrou em ⑥, a comercialização virou ⑦ e a expedição
+  ⑧ — ver a seção do laboratório.)*
   Vende depois de beneficiar; expede depois de vender. Os números são o campo `passo`, que o
   cartão mostra num selo — numerados **por bloco**, não por perspectiva (só a cadeia da safra
   e a perspectiva de clientes são filas; o apoio não é).
@@ -629,6 +631,32 @@ Módulo puro novo: `app/dimensoes.py` (sem banco, sem request — mesma linha de
   em nó que já existe, preservando nome/unidade/ordem, que são conteúdo do usuário) e **cria
   indicador estratégico em objetivo que já existe** (o beco que travou as linhas de receita em
   22/08). Aposentadoria só de `INDICADORES_APOSENTADOS`, e só sem medição e sem filho.
+
+### O laboratório entra na cadeia (2026-08-29 — ADR 2026-08-29)
+
+A análise de qualidade da semente acontece **três vezes** na safra e não estava no mapa:
+pré-colheita (amostra do campo → **libera colher**), recebimento na unidade (aceita o lote) e
+pós-beneficiamento na UBS (**laudo que aprova ou descarta**). Virou o objetivo `laboratorio` —
+*Laboratório e qualidade da semente* — no passo **⑥**.
+
+- **Três setas de entrada, uma de saída:** `cooperados → laboratorio`, `logistica → laboratorio`
+  e `ubs → laboratorio` (as duas primeiras como secundárias); a única saída de cadeia é
+  `laboratorio → comercializacao`. **Comercializa-se o lote APROVADO, não o beneficiado.**
+- Mora **depois** da UBS porque a posição na fila é a do **último laudo**, que é o que autoriza
+  vender; as setas contam que ele também atua antes — mesma leitura que o crédito já tinha
+  (posição no tempo ≠ função).
+- A ligação `ubs → comercializacao` **saiu** e virou a primeira entrada de
+  `mapa_base.LIGACOES_SUPERADAS`: a semeadura agora **apaga** as setas nomeadas ali, senão um
+  ciclo semeado antes ficaria com o caminho velho e o novo desenhados juntos.
+- `laboratorio → entrega` (sobe): reclamação de campo por germinação/vigor nasce no laudo.
+- **Renumeração:** comercialização **⑦/P7**, expedição **⑧/P8**; a esteira financeira desce
+  junto **por necessidade** (crédito P9, cobrança P10, barter P11, mesa P12) — `passo`, `col` e
+  `cod` são travados para contar a mesma ordem, e dois nós em P8 seria erro.
+- ⚠️ **Ciclo já semeado só recebe isso ao apertar “semear” de novo** — a semeadura é
+  idempotente e não roda sozinha.
+- Indicadores candidatos: germinação (%), vigor (%), descarte por lote (%), tempo amostra→laudo
+  (dias) e % de lotes com laudo antes da liberação. Meta de referência: *germinação ≥ 80% ·
+  descarte ≤ (definir)*.
 
 ## Realizado ligado na fonte — passo 2 (2026-08-24→27, ADR 2026-08-29)
 
