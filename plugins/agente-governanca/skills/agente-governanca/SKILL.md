@@ -632,6 +632,30 @@ Módulo puro novo: `app/dimensoes.py` (sem banco, sem request — mesma linha de
   indicador estratégico em objetivo que já existe** (o beco que travou as linhas de receita em
   22/08). Aposentadoria só de `INDICADORES_APOSENTADOS`, e só sem medição e sem filho.
 
+### Legenda das setas e cor por tipo de relação (2026-08-29)
+
+A pergunta que originou isto foi do Xayer, olhando o mapa: *"o que é a seta tracejada e a seta
+cheia?"*. A forma da seta sempre carregou significado — e significado que só quem escreveu o
+código conhece não é leitura, é adivinhação.
+
+- **Traço:** cheia = caminho **principal**; tracejada = `secundaria=True`, o caminho paralelo
+  (é o caso de `cooperados → laboratorio` e `logistica → laboratorio`, que existem mas não são
+  a fila principal).
+- **Cor = natureza da relação**, uma por tipo: `cadeia` **#E8720C** (o passo seguinte do
+  fluxo), `sobe` **#12A150** (sustenta a perspectiva de cima), `influencia` **#7C3AED** (pesa,
+  mas não é o caminho). Antes, `influencia` era âmbar igual a `cadeia` — duas relações
+  diferentes com a mesma cara.
+- **Mais presença:** opacidade base 0.9 (era 0.6), traço 2,6 px e **4 px no realce**, com o
+  resto caindo para 0.1 — a causa e efeito do nó clicado salta.
+- **A legenda mora acima do `#palco`**, nunca dentro: dentro, ela entraria na conta do
+  `getBoundingClientRect` que posiciona as curvas.
+- **A base viaja no próprio `<path>`** (`data-w` / `data-o`). O realce deduzia a espessura pela
+  cor (*"é âmbar? então 2"*) — o dia em que uma cor nova entrasse, quebrava em silêncio. Foi
+  exatamente o que ia acontecer com o roxo.
+- Dois testes amarram legenda e desenho: toda cor de `CORES` tem de aparecer nomeada na
+  legenda, todo `tipo` usado em `LIGACOES` tem de ter cor, e o realce não pode voltar a olhar
+  a cor. Legenda que discorda do desenho ensina errado.
+
 ### O laboratório entra na cadeia (2026-08-29 — ADR 2026-08-29)
 
 A análise de qualidade da semente acontece **três vezes** na safra e não estava no mapa:
