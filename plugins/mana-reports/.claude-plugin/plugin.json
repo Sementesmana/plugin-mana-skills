@@ -1,0 +1,5 @@
+{
+  "name": "mana-reports",
+  "description": "App de reports da diretoria da Sementes Mana (PWA instalavel) — Flask no Railway que NAO calcula report: le o contrato GET /api/reports + GET /api/report/<id> dos apps Mana com a chave em header (server-side) e desenha o envelope (meta/kpis/series/colunas/grupos/linhas/filtros/regua/glossario). Renderizador generico: report novo aparece na home sem uma linha de codigo nova. Traz a MAIA (pergunta em texto ou voz sobre o report aberto, com a modelagem da nota no contexto), o vigia do comite (alerta com PNG no WhatsApp quando abre vaga na sala), admin de quem acessa e embed no SoftExpert. Acesso por telefone da lista + codigo de 6 digitos pela porta unica do WhatsApp. Use SEMPRE no mana-reports.",
+  "version": "1.0.0"
+}
