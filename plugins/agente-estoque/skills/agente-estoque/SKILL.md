@@ -276,8 +276,20 @@ Se a UBS trata pela receita BASE e aplica o inoculante à parte, esse volume est
 somando dentro do `CAIXA VIGOR E PRAGA` e do `FORTENZA DUO INTACTA`. Pergunta
 para a operação, não para o código.
 
-⚠️ **Falta a tela de edição do de-para** — a pendência aparece, mas hoje só se
-resolve por SQL na `protheus_depara`.
+### A tela de de-para — `/tsi/depara`
+
+`TSI — De-para Protheus` na barra lateral. Mostra **todos** os códigos vistos no
+Protheus, não só os pendentes: dá para conferir o que casou sozinho, e não só
+consertar o que falhou. Ordem: pendência primeiro, maior volume no topo.
+
+Três situações, e a tela distingue as três: `automático` (casou por nome),
+`à mão` (alguém escolheu — e essa escolha vence sempre) e `pendente`.
+
+`POST /api/tsi/depara` **valida o destino contra o cadastro**: aceitar texto
+livre criaria mapa apontando para nada, que falha calado — justamente o que esta
+tela existe para evitar. Salvar não invalida o cache do Protheus: o mapa é lido
+do banco a cada consolidado, então bater no ERP a cada salvamento seria custo à
+toa.
 
 ## Variáveis de Ambiente Railway
 
