@@ -1,5 +1,5 @@
 {
   "name": "agente-estoque",
-  "description": "Painel de controle de estoque de sementes por cultivar + módulo TSI (Tratamento Industrial de Sementes) para Sementes Maná LTDA. Serviço Flask no Railway com PostgreSQL que cruza estoque manual com pedidos do Simple Agro em tempo real. Inclui módulo TSI com cadastro de produtos químicos, receitas (tratamentos), composição produto×dose, consolidado vivo cruzando pedidos SA × receitas, drill-down...",
-  "version": "1.0.0"
+  "description": "Painel de controle de estoque de sementes por cultivar + módulo TSI (Tratamento Industrial de Sementes) da Sementes Maná LTDA. Flask + PostgreSQL no Railway que cruza estoque manual com pedidos do Simple Agro em tempo real e, desde 2026-09-09, traz o volume TRATADO do Protheus pelo gateway agente-protheus: a aba TSI mostra Vendido (SA) × Tratado (PRT) × Falta tratar por receita, com quebra por variedade no drill, de-para por CÓDIGO na tabela protheus_depara e a safra defasada UM ciclo (produção no Protheus × comercialização no SA). Inclui cadastro de produtos químicos, receitas, composição produto×dose, consolidado vivo, drill-down, filtros rápidos, snapshots, campanhas e exportação PDF/XLSX. Use SEMPRE no agente-estoque — endpoints, lógica de estoque, painel HTML, cálculos TON/Bag, integração SA, módulo TSI, de-para do Protheus, relatórios.",
+  "version": "1.1.0"
 }

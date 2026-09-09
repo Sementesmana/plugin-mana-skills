@@ -1,6 +1,6 @@
 ---
 name: agente-estoque
-description: Painel de controle de estoque de sementes por cultivar + módulo TSI (Tratamento Industrial de Sementes) para Sementes Maná LTDA. Serviço Flask no Railway com PostgreSQL que cruza estoque manual com pedidos do Simple Agro em tempo real. Inclui módulo TSI com cadastro de produtos químicos, receitas (tratamentos), composição produto×dose, consolidado vivo cruzando pedidos SA × receitas, drill-down, filtros, e exportação PDF nos dois painéis. Use este skill sempre que precisar trabalhar com o agente-estoque — adicionar endpoints, corrigir lógica de estoque, modificar painel HTML, ajustar cálculos TON/Bag, corrigir integração SA, mexer no TSI (produtos/receitas/consolidado/origem do peso), gerar relatórios PDF, ou entender a arquitetura do serviço.
+description: Painel de controle de estoque de sementes por cultivar + módulo TSI (Tratamento Industrial de Sementes) da Sementes Maná LTDA. Flask + PostgreSQL no Railway que cruza estoque manual com pedidos do Simple Agro em tempo real e, desde 2026-09-09, traz o volume TRATADO do Protheus pelo gateway agente-protheus: a aba TSI mostra Vendido (SA) × Tratado (PRT) × Falta tratar por receita, com quebra por variedade no drill, de-para por CÓDIGO na tabela protheus_depara e a safra defasada UM ciclo (produção no Protheus × comercialização no SA). Inclui cadastro de produtos químicos, receitas, composição produto×dose, consolidado vivo, drill-down, filtros rápidos, snapshots, campanhas e exportação PDF/XLSX. Use SEMPRE no agente-estoque — endpoints, lógica de estoque, painel HTML, cálculos TON/Bag, integração SA, módulo TSI, de-para do Protheus, relatórios.
 ---
 
 # Agente Estoque — Sementes Maná LTDA
@@ -197,6 +197,88 @@ Layout:
 - **PDF de estoque inclui detalhamento de pedidos por cultivar** (Nº, Data, Cliente, Vendedor, Filial, Qtd, Uso, Status)
 - Textos longos em `Paragraph` para wrap automático
 
+## Volume TRATADO do Protheus (2026-09-09)
+
+A aba TSI cruza o que foi **vendido** (Simple Agro) com o que foi **tratado**
+(Protheus), por receita e por variedade.
+
+```
+Vendido (SA)    bags pedidas com aquele tratamento    ← já existia, chamava-se
+                                                        "Bags tratadas" e mentia
+Tratado (PRT)   NP9_TRATO = '1' no Protheus
+Falta tratar    Vendido − Tratado
+```
+
+**Nunca calcule "falta tratar" contra o SALDO do Protheus.** Saldo é o que está
+no armazém hoje, já líquido do que embarcou: tratei 50, tenho 10, vendi 60 →
+faltam 10, não 50. Contra o saldo a conta erra sempre para mais.
+
+### O caminho
+
+```
+agente-protheus /query/estoque  →  protheus_client.py  →  tsi/consolidado.py
+                                   (X-API-Key, cache 5min, idade do dado)
+```
+
+`protheus_client.py` é a única porta: nada aqui abre conexão com o SQL Server.
+Env: `PROTHEUS_URL`, `PROTHEUS_API_KEY` (consumidor `estoque`), e
+`PROTHEUS_SAFRA` opcional para fixar a safra.
+
+### ⭐ A safra é defasada UM ciclo
+
+`SAFRA 25/26` no Protheus é **produção**; a mesma semente é comercializada como
+safra **26/27** no Simple Agro. Sempre. Casar 26/27 com 26/27 devolve conjunto
+VAZIO e parece bug de integração. Por isso a safra **não** é derivada do filtro
+do painel — o gateway já tem o padrão certo, que se corrige sozinho na virada.
+
+### De-para por CÓDIGO, na `protheus_depara`
+
+Tabela `protheus_depara (tipo, codigo, nome_protheus, destino_norm, obs)`,
+bootstrap idempotente no boot. **Nasce vazia**: os 9 tratamentos e as 21
+cultivares casam sozinhos por `nome_norm` (medido nas duas direções). Só entra
+exceção. Precedência: **override de pessoa > casamento automático > pendência**.
+
+Chave é o CÓDIGO (`TRATAMENTO_COD`, `CULTIVAR_COD`), nunca o nome: renomear no
+Protheus mantém o código e o mapa não quebra; tratamento novo chega como código
+não mapeado, que é o único caso que pede decisão humana.
+
+### ⚠️ Normalizadores são INJETADOS, não copiados
+
+O `app.py` passa `norm_nome` e o `norm` do `tsi/calc.py` via
+`protheus_client.registrar_normalizadores`. A primeira versão copiava as duas
+funções e a cópia envelheceu **no mesmo dia** (o `norm_nome` ganhou
+`_strip_regiao`). Normalizador divergente **não dá erro** — só devolve pendência
+a mais. Regra: quem grava o `nome_norm` é quem manda no `nome_norm`.
+
+E são dois normalizadores diferentes: `cultivares.nome_norm` mantém acento,
+`tsi_receitas.nome_norm` tira.
+
+### Regras da tela
+
+- **`—` e `0` são distintos.** Zero é "não tratou nada"; travessão é "a ponte
+  com o Protheus caiu". Igualar os dois fabrica alarme falso.
+- **`falta` negativa aparece**, em azul, em vez de ser cortada em zero: tratado
+  acima do vendido é informação (UBS adiantou, ou casamento errado).
+- **Nada some calado.** Código sem destino e embalagem fora do mapa aparecem na
+  faixa acima da tabela **com o volume em bags**.
+- **Pendência só com volume.** Código com zero tratado (`00 = SEM TRATAMENTO`,
+  cultivar só com lote não tratado) fica fora: lista que nunca esvazia é lista
+  que ninguém olha.
+
+### Validação (2026-09-09, safra 25/26)
+
+`Vendido 6.032 · Tratado 3.661 · Falta 2.371`, com 89 linhas do gateway. O KPI
+"Bags TSI" mostra 6.040 — a diferença de 8 bags são os pedidos órfãos, que o
+painel de órfãos já contava.
+
+⚠️ **Em aberto:** 8 receitas com INOC/ARVÁTICO somam 407 bags com tratado zero.
+Se a UBS trata pela receita BASE e aplica o inoculante à parte, esse volume está
+somando dentro do `CAIXA VIGOR E PRAGA` e do `FORTENZA DUO INTACTA`. Pergunta
+para a operação, não para o código.
+
+⚠️ **Falta a tela de edição do de-para** — a pendência aparece, mas hoje só se
+resolve por SQL na `protheus_depara`.
+
 ## Variáveis de Ambiente Railway
 
 | Variável | Descrição |
@@ -207,6 +289,9 @@ Layout:
 | `SA_SAFRA_ID` | `69a5d85cae03f50036ee2531` (soja 26/27) |
 | `SA_GRUPO_ID` | `610a8b743829fd00385c48c9` (soja) |
 | `PAINEL_SENHA` | Senha do painel admin |
+| `PROTHEUS_URL` | `https://agente-protheus-production.up.railway.app` |
+| `PROTHEUS_API_KEY` | chave do consumidor `estoque` no `API_KEYS` do gateway |
+| `PROTHEUS_SAFRA` | opcional — fixa a safra de PRODUÇÃO (ex.: `SAFRA 25/26`) |
 
 ## Como Modificar
 
