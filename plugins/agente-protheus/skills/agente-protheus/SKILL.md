@@ -1,6 +1,6 @@
 ---
 name: agente-protheus
-description: Gateway REST de LEITURA do Protheus da Sementes Maná LTDA (plataforma N1, produção). Flask no Railway que conecta DIRETO no SQL Server do Protheus via pymssql (não é via SE dataset — o docstring do repo está desatualizado) e expõe datasets catalogados por HTTP: cliente (SA1010), vendedorcliente1 (SA1010+SA3010), baixas_pagar (SE5010+SE2010+SA2010) e baixas_receber (SE5010+SE1010+SA1010) — os dois de baixas alimentam o poller do agente-financeiro-gestao, com janela e corte em D-1; estoque/pedidos/titulos em aberto seguem como TODO. Consumido pelo SoftExpert (CORS restrito aos domínios do SE, Atividade Sistêmica) e por painéis Maná via X-API-Key ou cookie de sessão de 8h. Cache em memória por dataset+filtros com invalidação por endpoint, validação anti-injection dos códigos Protheus, headers de segurança e erro sanitizado que não expõe host nem base. Use SEMPRE no agente-protheus — adicionar dataset, cache, auth do painel, CORS do SE, conexão pymssql/FreeTDS, timeouts. Também quando mencionar: SA1010, SA3010, P12_PROD, PROTHEUS_DB_HOST, /query/<dataset>, /datasets, /vendedores, /clientes-por-vendedor, /cache/invalidar, gateway Protheus, IP shared Railway.
+description: Gateway REST de LEITURA do Protheus da Sementes Maná LTDA (plataforma N1, produção). Flask no Railway que conecta DIRETO no SQL Server via pymssql (não é via SE dataset — o docstring do repo está em drift) e expõe OITO datasets catalogados por HTTP: cliente e vendedorcliente1 (SA1010/SA3010), baixas_pagar e baixas_receber (SE5010), titulos_pagar (SE2010), titulos_receber (SE1010), pedidos_compra (SC7010) e estoque (NP9010+SBF010 — semente por cultivar × tratamento, com produzido/tratado/saldo e a safra defasada UM ciclo da comercial do Simple Agro). Consumido pelo agente-financeiro-gestao e pelo agente-estoque via X-API-Key por consumidor (API_KEYS), pelo SoftExpert com CORS restrito, e por cookie de 8h no painel — /query EXIGE auth. Use SEMPRE no agente-protheus: dataset novo, cache, auth, CORS do SE, pymssql/FreeTDS, timeouts. Também quando mencionar SA1010, SBF010, NP9010, NKD010, P12_PROD, /query/<dataset>, /datasets, /painel, gateway Protheus, IP shared Railway, safra de produção × comercialização.
 ---
 
 # agente-protheus — gateway REST → Protheus (SQL Server)
@@ -23,8 +23,14 @@ O docstring do `app.py` descreve "gateway via SE Conjunto de Dados (DI006)" e li
 | `vendedorcliente1` | SA1010 + SA3010 | `PESQUISA` | idem + COD_VENDEDOR, NOME_VENDEDOR |
 | `baixas_pagar` | SE5010 + SE2010 + SA2010 | `DATA_DE`, `DATA_ATE`, `FILIAL` | o que SAIU do caixa |
 | `baixas_receber` | SE5010 + SE1010 + SA1010 | `DATA_DE`, `DATA_ATE`, `FILIAL` | o que ENTROU no caixa |
+| `titulos_pagar` | SE2010 | `FILIAIS` | acervo completo, aberto e baixado (~23,7 mil linhas) |
+| `titulos_receber` | SE1010 | `FILIAIS` | idem, ~5,9 mil linhas |
+| `pedidos_compra` | SC7010 | `FILIAL`, `EMISSAO_DE`, `ENTREGA_DE` | pedidos em aberto, item a item |
+| `estoque` | NP9010 + SBF010 (+ SB5010/NKD010) | `SAFRA`, `FILIAL` | semente por cultivar × tratamento |
 
-Comentados como TODO: `estoque` (SB1010), `pedidos` (SC5010), `titulos_receber` (SE1010), `titulos_pagar` (SE2010). **Dataset novo entra no catálogo** — não criar rota solta.
+São **oito**. Falta só `pedidos` de venda (SC5010). **Dataset novo entra no catálogo** — não criar rota solta.
+
+⚠️ Versões antigas desta skill listavam dois ou quatro, e mandavam procurar estoque na SB1010. A **SB1010 é cadastro, não saldo**: o saldo de semente é por ENDEREÇO (SBF010) e a ficha do lote é a NP9010.
 
 ### O que os datasets de baixas ensinaram — leia antes de criar dataset novo
 
@@ -49,16 +55,42 @@ Comentados como TODO: `estoque` (SB1010), `pedidos` (SC5010), `titulos_receber` 
 Validação: filial 0201, 01/07–24/08/2026 — pagar **1217 / R$ 64.871.478,52**,
 receber **358 / R$ 35.283.442,36**.
 
+### O dataset `estoque` — três grandezas que não se confundem
+
+```
+QTD_PRODUZIDA   o que a UBS fichou            NP9010, histórico
+QTD_TRATADA     o que passou pelo TSI         NP9_TRATO = '1'
+QTD_SALDO       o que está no armazém HOJE    SBF010, saldo
+```
+
+A **SBF010 é saldo**: lote que zera SOME dela. A **NP9010 é a ficha do lote** e sobrevive ao lote zerar (medido: 476 de 1.038 lotes da 25/26 já sem saldo). Produzido − saldo = o que **já embarcou**.
+
+**"Falta tratar" = Vendido(SA) − TRATADO**, jamais `Vendido − saldo atual`: tratei 50, tenho 10, vendi 60 → faltam 10, não 50. Contra o saldo a conta erra sempre para mais, no tamanho do que já saiu.
+
+⭐ **A SAFRA É DEFASADA UM CICLO.** `SAFRA 25/26` aqui é **produção**; a mesma semente é comercializada como safra **26/27** no Simple Agro. Sempre. Casar 26/27 com 26/27 devolve conjunto VAZIO e parece bug de integração. O dataset **deriva** a safra da data (`_safra_producao_padrao`), e o `_validar_safra` aceita `25/26` ou `SAFRA 25/26`.
+
+**Os de-para casam sozinhos** (medido nas duas direções): tratamento por `NKD_DESCRI` via `B5_TRATAM` contra `tsi_receitas` — **9 de 9**; variedade por `NP9_CTVDES` contra `cultivares.nome_norm` — **21 de 21**. E **código ↔ nome é 1:1**, então mapa se faz por **código** e exibe o nome: renomeação no Protheus mantém o código e não quebra; tratamento novo aparece como código não mapeado.
+
+⚠️ **Nunca a descrição do produto.** O `B1_DESC` escreve `FORTENZA DUO` onde a receita é `FORTENZA DUO INTACTA`, e mistura `O780CE` com `NEO780CE`.
+
+⚠️ **`NP9_UM` sempre no grão.** Quatro embalagens (`5.0 M` = bag de 5 milhões, `200 M` = 1/25, `140 M`, `S40`); as duas últimas nem estão no mapa do agente-estoque. Hoje a safra corrente é `5.0 M` pura — o que segura o número é a base, não a query.
+
+⚠️ **`NP9_TRATO` pode discordar do produto.** Em 09/09 havia 4 lotes / 17 bags de SKU tratada (`71KA72 · FORTENZA DUO INTACTA`) com o flag em `2`. O flag erra para o lado seguro. Quem consome **mostra** a divergência, não escolhe em silêncio.
+
+Campo de domínio se pergunta à **SX3010** (`X3_CBOX`), nunca se deduz: `NP9_TRATO` = `1=Sim, 2=Não, 3=Troca de Produto`. E dois campos que parecem úteis estão **vazios em 100%**: `NP9_FORMUL` e `NP9_DOCD3`.
+
+Validação (safra 25/26, todas as filiais, 09/09/2026): **89 linhas, 1.038 lotes, 22.590 produzidas, 3.661 tratadas, 11.960 de saldo**. Os 3.661 fecham por outro caminho na SD3010 (`TM 002 / PR0`, estorno em branco).
+
 ## Endpoints
 
 | Rota | Auth | O que faz |
 |---|---|---|
 | `GET /health` | — | status + conectividade (mostra `"database": "protheus"`, nome genérico de propósito) |
 | `GET /datasets` | — | lista o catálogo |
-| `GET/POST /query/<dataset_id>` | — (CORS do SE) | consulta; POST aceita filtros JSON |
+| `GET/POST /query/<dataset_id>` | `X-API-Key` ou cookie | consulta; POST aceita filtros JSON |
 | `GET /vendedores` | `X-API-Key` ou cookie | lista de vendedores |
 | `GET /clientes-por-vendedor/<cod>` | `X-API-Key` ou cookie | carteira do vendedor |
-| `POST /cache/invalidar` | — | invalida tudo ou `{"dataset_id": "cliente"}` |
+| `POST /cache/invalidar` | `X-API-Key` ou cookie | invalida tudo ou `{"dataset_id": "cliente"}` |
 | `GET/POST /painel` | senha → cookie | consulta visual (HTML inline) |
 
 ## Segurança (não afrouxar)
@@ -71,7 +103,15 @@ receber **358 / R$ 35.283.442,36**.
 
 ## Variáveis de ambiente
 
-`PROTHEUS_DB_HOST`, `PROTHEUS_DB_PORT` (1433), `PROTHEUS_DB_USER`, `PROTHEUS_DB_PASSWORD`, `PROTHEUS_DB_NAME` (`P12_PROD`), `PROTHEUS_LOGIN_TIMEOUT` (10), `PROTHEUS_QUERY_TIMEOUT` (30), `PROTHEUS_DB_ENCRYPT`, `PAINEL_SENHA`.
+`PROTHEUS_DB_HOST`, `PROTHEUS_DB_PORT` (1433), `PROTHEUS_DB_USER`, `PROTHEUS_DB_PASSWORD`, `PROTHEUS_DB_NAME` (`P12_PROD`), `PROTHEUS_LOGIN_TIMEOUT` (10), `PROTHEUS_QUERY_TIMEOUT` (30), `PROTHEUS_DB_ENCRYPT`, `PAINEL_SENHA`, `API_KEYS`.
+
+## Auth — chave por consumidor
+
+`API_KEYS` é `nome:chave,nome2:chave2`. O log registra `[AUTH] consumidor=<nome>`, então dá pra saber quem chamou e revogar um sem derrubar os outros. Consumidores: `financeiro` e `estoque`.
+
+⚠️ Chave **sem** o `nome:` na frente o parser **descarta em silêncio** — sem erro e sem log, ela simplesmente não existe e o consumidor toma 401. E `_API_KEYS` é lido no import: chave nova só vale depois do restart.
+
+A `PAINEL_SENHA` ainda é aceita como chave, por compatibilidade — é o que o SoftExpert usa. Mas consumidor NOVO entra em `API_KEYS`: senha de painel é credencial de pessoa, e girá-la derrubaria integração.
 
 ## Deploy
 
