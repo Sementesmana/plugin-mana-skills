@@ -1,0 +1,5 @@
+{
+  "name": "agente-dm",
+  "description": "Maná Mercado — plataforma de Desenvolvimento de Mercado (DM) da Sementes Maná. Flask + Jinja2 + Alpine + PostgreSQL (banco-mana, schema dm) + Railway. Vincula pedidos de bonificação, difusão e doação do Simple Agro (lidos do lake do banco-mana, SEM login no SA) a solicitações justificadas com aprovação (rascunho → aguardando → aprovada/reprovada), lado a lado com concorrentes + termo assinado + protocolo DM-ano-seq, usuários admin/vendedor ligados ao vendedor do SA pelo ID. Use SEMPRE no agente-...",
+  "version": "1.0.0"
+}
