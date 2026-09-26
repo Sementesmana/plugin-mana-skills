@@ -1,6 +1,6 @@
 ---
 name: agente-pedidos
-description: Ponte de LEITURA SoftExpert ↔ Simple Agro da Sementes Maná LTDA + painel-reais da carteira de crédito. Flask no Railway, somente leitura no SE (nada é gravado no formulário). O SE chama /pedidos-venda como Fonte de Dados REST na atividade de crédito — o agente lê o cpf_cnpj do scred via SOAP fm_ws, autentica no SA com usuário dedicado, busca pedidos Soja da safra, expande o grupo econômico pelos CNPJs do campo grupoeconomico e mapeia SA→grid SE via CAMPO_MAP (fallbacks por campo: o SA renomeia campo sem aviso). Primeiro consumidor do banco-mana com schema dedicado agente_pedidos — data lake lake-first (workflows, detalhe, totais, atividades, tempos, gaps) com fallback ao vivo. Use SEMPRE no agente-pedidos — Fonte de Dados REST do SE, CAMPO_MAP, grupo econômico, data lake, painel-reais, situação de crédito, tempos de atividade, gaps sem CRE. Também quando mencionar: /pedidos-venda, /painel-reais, /api/situacao-credito, lake-first, 452 single-session, bridge SE-SA somente leitura, /api/prioridade, alta/média/baixa/não aplicável, observação do cliente, triagem da fila de crédito, Total Faturado, Saldo c/ Garantia, Aprovado com Garantia, lastro de endosso, protheus_faturado, faturado_foto, E1_VENCORI, NF menos NCC, natureza de semente, /api/faturado.
+description: Ponte de LEITURA SoftExpert ↔ Simple Agro da Sementes Maná LTDA + painel-reais da carteira de crédito. Flask no Railway, somente leitura no SE (nada é gravado no formulário). O SE chama /pedidos-venda como Fonte de Dados REST na atividade de crédito — o agente lê o cpf_cnpj do scred via SOAP fm_ws, autentica no SA com usuário dedicado, busca pedidos Soja da safra, expande o grupo econômico pelos CNPJs do campo grupoeconomico e mapeia SA→grid SE via CAMPO_MAP (fallbacks por campo: o SA renomeia campo sem aviso). Primeiro consumidor do banco-mana com schema dedicado agente_pedidos — data lake lake-first (workflows, detalhe, totais, atividades, tempos, gaps) com fallback ao vivo. Use SEMPRE no agente-pedidos — Fonte de Dados REST do SE, CAMPO_MAP, grupo econômico, data lake, painel-reais, situação de crédito, tempos de atividade, gaps sem CRE. Também quando mencionar: /pedidos-venda, /painel-reais, /api/situacao-credito, lake-first, 452 single-session, bridge SE-SA somente leitura, /api/prioridade, alta/média/baixa/não aplicável, observação do cliente, triagem da fila de crédito, Total Faturado, Saldo c/ Garantia, Aprovado com Garantia, lastro de endosso, protheus_faturado, faturado_foto, E1_VENCORI, NF menos NCC, natureza de semente, /api/faturado, /api/faturado-detalhe, dataset faturamento_detalhe, drill-down da lupa nota a nota, chaves_protheus, duplicata faturada vira Confeccionada, garantia_auto_dup, cards de faturamento sem lastro, _riscoFatDe, revenda-mae pela soma dos endossados.
 ---
 
 # agente-pedidos — ponte de leitura SE ↔ Simple Agro
@@ -175,6 +175,80 @@ mata o worker: gunicorn com `--timeout 60` e duas leituras remotas de 60s encade
 Variáveis: `PROTHEUS_URL`, `PROTHEUS_API_KEY`, `PROTHEUS_NATUREZAS_SEMENTE` (default
 `400101,400103`), `PROTHEUS_FATURADO_TTL` (default 600). No gateway, `API_KEYS` precisa da entrada
 `pedidos:<chave>` — **chave sem o prefixo é descartada em silêncio**.
+
+
+### O drill-down da lupa — as notas por trás do total (2026-09-19)
+
+`GET /api/faturado-detalhe?chaves=<raízes>` → para cada chave: `notas[]`, `fora{}`, `nf`, `ncc`,
+`valor`, `titulos`, `total_grade`, `confere`. A lupa mostra o total em cima e a lista embaixo.
+A fonte é o dataset **`faturamento_detalhe`** do `agente-protheus` (irmão do `faturamento`
+agregado), via `protheus_faturado.buscar_detalhe`.
+
+⚠️ **NÃO recalcula o recorte.** `_calc_faturado` congela `chaves_protheus = {chave: {raiz:
+[vencimentos]}}` no lake, e a rota só pede ao Protheus as notas dessas raízes. Se o detalhe
+escolhesse sozinho o que conta, a tela teria **duas verdades** — o número da linha e a lista que
+o explica — por caminhos diferentes. Concordariam hoje e divergiriam no primeiro ajuste de regra.
+
+`confere` compara a soma da lista com o total da grade. Divergiu, a tela **diz** — não escolhe um
+dos dois calado.
+
+**O que fica de fora não some:** volta agregado por rótulo (`PR/420104`, `vencimento fora das
+parcelas a-prazo`) com contagem e dinheiro. Lista crua não serviria — uma raiz sozinha (SIAP) tem
+**720 títulos desde 2021**, e 717 não têm nada a ver com a safra.
+
+`protheus_faturado.classificar(tipo, natureza)` é a MESMA regra do agregado, numa função só, e
+`buscar_detalhe` não tem cache de propósito (leitura sob demanda de UM grupo).
+
+### Duplicata faturada → Confeccionada (2026-09-19)
+
+Garantia **duplicata** + `faturado > 0` ⇒ o Status Garantia sobe para `confeccionada`, sozinho,
+depois da apuração do faturado (`_gar_auto_duplicata_faturada`).
+
+⚠️ **Isto INVERTE a decisão de 13/09** ("duplicata não tem status de garantia"), que continua
+valendo para quem **não** faturou. A inversão é coerente porque mudou um **fato**: em 13/09 não
+existia a coluna Total Faturado e o painel não tinha como saber se a duplicata já tinha nascido.
+A nota emitida **é** a duplicata existindo.
+
+**O gatilho é `analise_revisao.garantias`** (o tipo da garantia, vindo da ata do comitê), não o
+`Aprovado com Garantia` — esse é valor.
+
+⚠️ **`agente_pedidos.garantia_auto_dup` existe para a regra não brigar com a pessoa.** A lei do
+`quem` não cobre este caso: devolver o status para "— sem status" na tela **apaga** a linha de
+`status_garantia` (o POST faz DELETE), e com ela some a marca de quem escreveu. Sem a tabela, a
+regra reescreveria "Confeccionada" todo dia, para sempre. Com ela, atua **uma vez por processo**.
+
+Não puxa de volta quem já está em assinatura/registro. **Não tranca carregamento**:
+`_carreg_aplicar_regra` checa duplicata *antes* de olhar o degrau. Primeira passada: 11 processos.
+
+### Os três alarmes de faturamento sem lastro (2026-09-19)
+
+Cards vermelhos no topo, clicáveis, **três** e não um — cada um tem um dono diferente:
+
+| card | o que é | quem resolve |
+|---|---|---|
+| Faturou SEM garantia aprovada | tem CRE, faturou, sem Aprovado com Garantia | crédito (atualizar o portal) |
+| Faturou ALÉM do endosso | tem lastro, mas o faturado passou dele | crédito (lastro insuficiente) |
+| Faturou SEM nenhuma CRE | faturou e não há solicitação | comercial (venda sem processo) |
+
+`_riscoFatDe(w)` classifica, e **o card e o filtro chamam a mesma função**. Enquanto a regra
+estava escrita duas vezes, consertar um lado não chegava no outro.
+
+⚠️ **O que não se sabe não vira acusação.** `_garantidoDe` devolve `null` quando a escada não
+carregou; contar isso como descoberto acusaria o crédito por causa de falha de rede, e alarme que
+acusa errado para de ser olhado. Fica de fora **e é contado**, no tooltip.
+
+**Revenda-mãe usa a soma dos endossados** (`_somaMaeDe`), a mesma expressão do `_saldoGarCel` —
+numa revenda o crédito e a garantia moram nos endossados. Ignorar isso pôs a SIAP no card
+mostrando R$ 2.901.587,50 de garantia na mesma linha.
+
+⚠️ **A memo de `_aninharRevendas` tem as FONTES na chave**, não só a lista: `_garantias`,
+`_situacoes` e `_faturado` chegam **depois** do load. Memoizando só pela lista, a primeira chamada
+rodou antes da escada existir, os 29 endossados da SIAP deram zero e o cache congelou isso — a
+coluna mostrava R$ 2,9 mi e o card dizia o contrário.
+
+⚠️ **O HTML do painel é uma f-string:** `\\n` no fonte chega como `\n` no navegador; `\n` no fonte
+vira **quebra de linha real** dentro da string JS e mata a página inteira. Validar desescapando na
+mão não vale — renderize a f-string (`ast.literal_eval`) e só então rode `node --check`.
 
 
 ## ⚠️ Usuário dedicado no Simple Agro
