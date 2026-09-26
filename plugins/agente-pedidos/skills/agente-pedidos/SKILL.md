@@ -1,6 +1,6 @@
 ---
 name: agente-pedidos
-description: Ponte de LEITURA SoftExpert ↔ Simple Agro da Sementes Maná LTDA + painel-reais da carteira de crédito. Flask no Railway, somente leitura no SE (nada é gravado no formulário). O SE chama /pedidos-venda como Fonte de Dados REST na atividade de crédito — o agente lê o cpf_cnpj do scred via SOAP fm_ws, autentica no SA com usuário dedicado, busca pedidos Soja da safra, expande o grupo econômico pelos CNPJs do campo grupoeconomico e mapeia SA→grid SE via CAMPO_MAP (fallbacks por campo: o SA renomeia campo sem aviso). Primeiro consumidor do banco-mana com schema dedicado agente_pedidos — data lake lake-first (workflows, detalhe, totais, atividades, tempos, gaps) com fallback ao vivo. Use SEMPRE no agente-pedidos — Fonte de Dados REST do SE, CAMPO_MAP, grupo econômico, data lake, painel-reais, situação de crédito, tempos de atividade, gaps sem CRE. Também quando mencionar: /pedidos-venda, /painel-reais, /api/situacao-credito, lake-first, 452 single-session, bridge SE-SA somente leitura, /api/prioridade, alta/média/baixa/não aplicável, observação do cliente, triagem da fila de crédito.
+description: Ponte de LEITURA SoftExpert ↔ Simple Agro da Sementes Maná LTDA + painel-reais da carteira de crédito. Flask no Railway, somente leitura no SE (nada é gravado no formulário). O SE chama /pedidos-venda como Fonte de Dados REST na atividade de crédito — o agente lê o cpf_cnpj do scred via SOAP fm_ws, autentica no SA com usuário dedicado, busca pedidos Soja da safra, expande o grupo econômico pelos CNPJs do campo grupoeconomico e mapeia SA→grid SE via CAMPO_MAP (fallbacks por campo: o SA renomeia campo sem aviso). Primeiro consumidor do banco-mana com schema dedicado agente_pedidos — data lake lake-first (workflows, detalhe, totais, atividades, tempos, gaps) com fallback ao vivo. Use SEMPRE no agente-pedidos — Fonte de Dados REST do SE, CAMPO_MAP, grupo econômico, data lake, painel-reais, situação de crédito, tempos de atividade, gaps sem CRE. Também quando mencionar: /pedidos-venda, /painel-reais, /api/situacao-credito, lake-first, 452 single-session, bridge SE-SA somente leitura, /api/prioridade, alta/média/baixa/não aplicável, observação do cliente, triagem da fila de crédito, Total Faturado, Saldo c/ Garantia, Aprovado com Garantia, lastro de endosso, protheus_faturado, faturado_foto, E1_VENCORI, NF menos NCC, natureza de semente, /api/faturado.
 ---
 
 # agente-pedidos — ponte de leitura SE ↔ Simple Agro
@@ -120,6 +120,62 @@ Coluna **Vencimento** = data da **última parcela** do pedido (quando ele termin
 `SE_URL`, `SE_API_KEY` (JWT) · `SA_BASE_URL`, `SA_USERNAME`, `SA_PASSWORD`, `SA_SAFRA_ID`, `SA_GRUPO_ID` · `BANCO_MANA_URL` · `PAINEL_SENHA`.
 
 IDs fixos SA: safra 26/27 `69a5d85cae03f50036ee2531` · grupo Soja `610a8b743829fd00385c48c9`.
+
+## Total Faturado e Saldo c/ Garantia — o controle de lastro (2026-09-17)
+
+Duas colunas no `/painel-reais`, coladas no `Aprovado com Garantia`:
+
+```
+Saldo c/ Garantia = Aprovado com Garantia − Total Faturado
+```
+
+Responde "quanto ainda dá para faturar com endosso confeccionado atrás". Na SIAP no dia em que
+subiu: `2.901.587,50 − 169.564,32 = R$ 2.732.023,18`, contra R$ 17,66 mi de pedido a-prazo aberto.
+
+**A chave** (`protheus_faturado.py`, medida contra a base inteira antes do código):
+
+```
+documento   E1_CLIENTE   raiz sem DV: 8 = CNPJ, 9 = CPF (zero exceção em 6.319 títulos)
+vencimento  E1_VENCORI   preenchido em 6.319/6.319
+entra       TIPO = NF    e NATUREZA ∈ {400101, 400103}
+abate       TIPO = NCC   e NATUREZA ∈ {400101, 400103}   ← subtração EXPLÍCITA: a NCC vem POSITIVA
+```
+
+⚠️ **`E1_VENCORI`, nunca `E1_VENCREA`.** O `VENCREA` é ajustado para dia útil e **11,1% dos
+títulos** (703 de 6.319) têm `VENCREA ≠ VENCTO` — um em cada nove não casaria com a parcela do
+pedido, sem erro e sem log. O `VENCREA` serve para EXIBIR, não para casar.
+
+⚠️ **Classificação POSITIVA.** "Tudo que não é NCC" somaria os **R$ 277 mi de `RA`** (recebimento
+antecipado) e inflaria o faturado em ~41%. Tipo desconhecido fica de fora **e é contado** em
+`ignorados`, rotulado `TIPO/NATUREZA`, para não virar faturamento por omissão.
+
+⚠️ **Tipo e natureza são complementares.** A `400101` é NF **e** RA; a NF tem **duas** naturezas.
+Nenhum dos dois campos resolve sozinho.
+
+⚠️ **Royalty (`PR`, `RYTCOOP*`, natureza `420104`) fica fora**: a NF de semente já sai com
+germoplasma + tratamento + royalty + frete dentro. Somar o `PR` contaria royalty duas vezes.
+
+**A foto** (`agente_pedidos.faturado_foto`): congela o par `(raiz, vencimento)` na primeira vez que
+ele tem faturamento e **nunca remove**. Congela a **chave**, jamais o **valor** — em 2026-09-17
+duas notas foram canceladas no Protheus e o faturado caiu R$ 236.239,56 corretamente; com valor
+congelado, esse dinheiro somaria para sempre e o painel travaria faturamento com lastro.
+
+**Três estados, sempre.** `None` = "não consegui saber" ≠ `0` = "não faturou". Qualquer ponta
+desconhecida derruba o **saldo inteiro**, não só a célula do faturado. Motivo: faturado zerado por
+engano deixa o saldo **cheio** e o painel autoriza faturamento sem lastro — entre os dois erros
+possíveis, esse é o caro.
+
+**Na linha da revenda**, o faturado soma o **conjunto** `{revenda} ∪ {endossados}`, cada documento
+uma vez — "próprio + filhos" contaria em dobro no dia em que um endossado for faturado no
+documento da revenda.
+
+⚠️ **`/api/faturado?live=1` dispara em background e devolve 202.** Calcular dentro da requisição
+mata o worker: gunicorn com `--timeout 60` e duas leituras remotas de 60s encadeadas.
+
+Variáveis: `PROTHEUS_URL`, `PROTHEUS_API_KEY`, `PROTHEUS_NATUREZAS_SEMENTE` (default
+`400101,400103`), `PROTHEUS_FATURADO_TTL` (default 600). No gateway, `API_KEYS` precisa da entrada
+`pedidos:<chave>` — **chave sem o prefixo é descartada em silêncio**.
+
 
 ## ⚠️ Usuário dedicado no Simple Agro
 
