@@ -7,6 +7,7 @@
 
 | Arquivo | Quando abrir |
 |---|---|
+| [rubrica-qualidade.md](rubrica-qualidade.md) | **antes de abrir qualquer PR**; régua do juiz na revisão adversarial; "está pronto?"; revisar o trabalho de outro dev |
 | [git-crlf-fantasma-e-checkout.md](git-crlf-fantasma-e-checkout.md) | git mostra arquivos modificados que ninguém tocou; diff com inserções == deleções; **antes de qualquer commit em lote numa varredura**; antes de QUALQUER `git checkout -- .`; lock órfão travando pull |
 | [se-embed-frame-validador.md](se-embed-frame-validador.md) | embed de painel no SoftExpert recusado; widget "Página WEB"; deploy que "não muda nada" depois de env nova |
 | [gitignore-desde-o-dia-1.md](gitignore-desde-o-dia-1.md) | repo novo; `.pyc`/`__pycache__` aparecendo no diff; limpar lixo versionado |
