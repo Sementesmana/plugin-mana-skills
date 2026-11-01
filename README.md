@@ -76,3 +76,12 @@ pip install "git+https://github.com/Sementesmana/mana-habilidade-<nome>.git@v<X.
 ## Dono
 
 Xayer (@xayer-mana) + CODEOWNERS por categoria conforme skills crescem.
+
+## Skills de agente: fonte única (desde 2026-11-01)
+
+A `SKILL.md` de um agente vive **no repositório do agente** (ADR 2026-05-13). O que está em `plugins/<agente>/skills/<agente>/SKILL.md` é só um **espelho**.
+
+- Para mudar a skill de um agente, edite no repositório do agente, nunca aqui.
+- Depois, para atualizar o espelho, rode `GITHUB_TOKEN=... python3 _tools/sincronizar_espelhos.py --aplicar <agente>`.
+- Sem `--aplicar`, o script só mostra a situação de cada espelho: `igual`, `atrasado`, `conflito` ou `sem-canonico`.
+- Um espelho em `conflito` nunca é sobrescrito, porque o merge é humano.
