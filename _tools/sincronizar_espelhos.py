@@ -17,6 +17,9 @@ Uso:
   GITHUB_TOKEN=... python3 _tools/sincronizar_espelhos.py            # só relatório
   GITHUB_TOKEN=... python3 _tools/sincronizar_espelhos.py --aplicar [agente ...]
       # copia os "atrasado" (todos, ou só os agentes listados) e sobe o patch da versão
+  GITHUB_TOKEN=... python3 _tools/sincronizar_espelhos.py --aplicar --forcar <agente>
+      # copia mesmo em "conflito". Só use depois de PROVAR que o espelho não tinha nada
+      # além de uma versão ANTIGA do canônico (ex.: o canônico foi reescrito como mapa).
 Regra para quem mantém: edite SEMPRE o SKILL.md no repo do agente; depois rode este script.
 """
 import json, os, re, sys, urllib.request, urllib.error
@@ -53,6 +56,9 @@ def main():
         sys.exit("defina GITHUB_TOKEN (leitura dos repos da org)")
     aplicar = "--aplicar" in sys.argv
     so = {a for a in sys.argv[1:] if not a.startswith("--")}
+    forcar = "--forcar" in sys.argv
+    if forcar and not so:
+        sys.exit("--forcar exige a lista explícita de agentes")
     mkt_p = os.path.join(RAIZ, ".claude-plugin", "marketplace.json")
     mkt = json.load(open(mkt_p, encoding="utf-8"))
     res = {}
@@ -73,7 +79,7 @@ def main():
                 so_no_espelho = [l for l in esp.splitlines() if l.strip() and l not in linhas_can]
                 st = "conflito" if so_no_espelho else "atrasado"
         res.setdefault(st, []).append(nome)
-        if aplicar and st == "atrasado" and (not so or nome in so):
+        if aplicar and (st == "atrasado" or (forcar and st == "conflito")) and (not so or nome in so):
             open(esp_p, "w", encoding="utf-8", newline="\n").write(can)
             for x in mkt["plugins"]:
                 if x["name"] == nome:
