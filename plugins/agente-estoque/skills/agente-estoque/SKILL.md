@@ -170,6 +170,19 @@ def _bootstrap_tudo():
 
 ## Painel Principal — UI
 
+- **Coluna Saldo (Bag) no drill de Venda/Devolução (2026-09-26):** o que
+  ainda não foi faturado do pedido = `quantidade − item.quantidade_faturada`
+  do SA (campo ausente = nada faturado). Hover mostra o faturado; rodapé
+  soma "Saldo a faturar" respeitando o filtro.
+- **Coluna Terceiro no drill de Venda/Devolução (2026-09-26):** vem de
+  `item.classificacao_produto_terceiro` do pedido SA (ADTM / ADTP; TERC é
+  exibido como **GOIAS - TERC** e é o único fora do total ADTM + ADTP; vazio =
+  própria). Pedido antigo sem o campo e com `produto_terceiro = true` sai pelo
+  prefixo do `codref` (050 = ADTM, 070 = ADTP — igual ao sufixo do SKU no
+  catálogo do SA). Gravado como `terceiro` em cada linha de `pedidos`. O
+  rodapé mostra, ao lado do total, **ADTM + ADTP** e **GOIAS - TERC** somados por item
+  (pedido com itens mistos soma certo em cada balde) e respeita o filtro.
+
 - **Sidebar verde** com Estoque, Inserir Estoque + grupo TSI (Painel, Produtos, Receitas, Configurações)
 - **Busca de cima** filtra a tabela inteira por substring (não só seleciona dropdown)
 - **5 KPIs respondem aos filtros:** Cultivares, Estoque Total, Qtd Pedida, Saldo Disponível, Saldo Negativo
@@ -212,6 +225,62 @@ Falta tratar    Vendido − Tratado
 **Nunca calcule "falta tratar" contra o SALDO do Protheus.** Saldo é o que está
 no armazém hoje, já líquido do que embarcou: tratei 50, tenho 10, vendi 60 →
 faltam 10, não 50. Contra o saldo a conta erra sempre para mais.
+
+### Tela de de-para = CONFERÊNCIA completa (2026-09-26)
+
+`/tsi/depara` abre em "Todos": lista TODO código do Protheus nos dois eixos
+(`protheus_client.codigos_todos`, inclusive volume zero), com a coluna **Como
+vinculou** (automático = nome normalizado igual ao cadastro; à mão = data da
+escolha + obs; pendente; ignorado = código 00) e alertas: dois códigos no mesmo
+destino, vínculo à mão com nome diferente, destino que sumiu. Card **Sem par no
+Protheus** = receitas/variedades que nenhum código aponta (conferência nos dois
+sentidos). O dropdown de variedade é `cultivares` ∪ variedades dos pedidos SA
+(`opcoes_destino`, marcadas "só no SA") — o POST valida contra a mesma lista. O
+casamento AUTOMÁTICO continua só contra o cadastro (a tela não mostra vínculo
+que a conta não usa); variedade só-do-SA entra por escolha manual.
+
+### TSI por Receita: Devolvido, Entregue e linha por pedido (2026-09-29)
+
+Colunas: Vendido · Tratado · **Devolvido** · Falta tratar · **Entregue** ·
+**Falta entregar**. Devolvido = lançamento manual do Pedido de Compra tipo
+Devolução, agora com **tratamento obrigatório** (`compras.tratamento`, receita
+ou SEM TRATAMENTO) — ABATE do vendido: Falta tratar = vendido − devolvido −
+tratado; Falta entregar = vendido − devolvido − entregue. Entregue = faturado
+no SA (`item.quantidade_faturada`, convertido para bag pela mesma razão da
+quantidade). Devolução antiga sem tratamento vai para
+`res["devolucao_sem_tratamento"]` (linha vermelha à parte), nunca chutada numa
+receita. Filtro de cliente/vendedor exclui as devoluções manuais (cliente
+delas é texto livre). Drill: Variedades (padrão) e Consumo; aba Pedidos saiu.
+"+" da variedade = uma linha por PEDIDO (cliente, pedido, vendido, devolvido,
+entregue, falta entregar), sem Tratado/Falta tratar. Código:
+`calc._acum_ped`/`_var_out` e `consolidado._aplicar_devolucoes`.
+
+### Card "Saldo de Tratamento" (2026-09-26)
+
+Abaixo do "TSI por Receita": saldo de HOJE por SKU do Protheus (código +
+B1_DESC cheio, cultivar, tratamento, tipo pelo prefixo 040/420 Própria · 050
+ADTM · 070 ADTP · 071 GH), com Saldo / Empenhado / Bloqueado / Disponível em
+bags. Fonte: dataset `saldo_produto` do agente-protheus (SBF010 somada por
+lote × armazém; empenho SDC010 e bloqueio SDD010 pré-agregados — join direto
+multiplicava o lote). Caminho: `protheus_client.buscar_saldo_produto` (cache
+5 min, fail-soft) → `GET /api/tsi/saldo-produto` → card (filtros cultivar,
+tratamento, tipo, filial, busca; ordenação; TOTAL). UM fora do UM_PARA_BAG
+aparece como "?" com a quantidade crua — não vira bag inventada. Carrega à
+parte do consolidado. **Só a safra comercial corrente** (26/27 em set/2026 =
+`SAFRA 25/26` de produção no Protheus, via `safra_producao_de_comercial`);
+`?safra=27/28` troca, `PROTHEUS_SAFRA` força. Lote de safra velha não aparece.
+
+### Linha SEM TRATAMENTO (2026-09-25)
+
+O quadro "TSI por Receita" mostra, **depois** da linha TOTAL e fora dela, uma
+linha cinza `SEM TRATAMENTO` com as bags vendidas sem TSI (tratamento `00` /
+label "SEM TRATAMENTO" / vazio). Ela vem em `res["sem_tratamento"]`
+(`{receita, bags, qtd_pedidos, variedades}`), **não** em `res["receitas"]`, e
+não soma em `bags_total`, `bags_por_fornecedor` nem em campanha nenhuma
+(Corteva/Syngenta) — quem consome `receitas` (campanhas, xlsx, pdf) não a vê.
+Tratado/Falta ficam "—" (não se aplica). Some com filtro de fornecedor ativo, e
+com filtro de tratamento que não inclua SEM TRATAMENTO. Drill: Pedidos
+(`/api/tsi/receita/SEM%20TRATAMENTO/drill`) e Variedades.
 
 ### O caminho
 
@@ -350,3 +419,60 @@ reportlab==4.2.5
 - `06-Agentes-e-Skills/agente-estoque.md` — nota canônica
 - `08-Decisoes/2026-05-13-origem-peso-bag-tsi.md` — ADR sobre toggle SA/Sistema
 - `08-Decisoes/2026-05-02-caminho-A-padrao-migracao.md` — padrão de migração preservando PG↔Flask
+
+## Painel de Estoque: switch Convertido × Por embalagem (2026-09-30)
+
+- Base: 1 bag = 5 milhões de sementes. `tsi.calc.EMBALAGEM_PARA_BAG` é a tabela única
+  (5M = 1 · 2,5M "2.5 MIL S" = 0,5 · 200 mil = 1/25). O painel usa a mesma via `_embalagem_item`.
+- `fetch_sa_vendas` grava por pedido `embalagem`, `fator`, `quantidade_eq`, `faturado_eq`, `saldo_eq`;
+  `quantidade` continua FÍSICA. `build_estoque_view` acrescenta `qtd_bag_eq`, `devolucao_bag_eq`, `saldo_bag_eq`.
+- Os campos antigos (`qtd_bag`, `saldo_bag`…) NÃO mudaram: `/api/estoque/totais`, gestor-estoque e celular
+  seguem somando quantidade física até o Dayan autorizar a troca (ver `/api/diag/embalagens`).
+- Tela: switch no cabeçalho da tabela (localStorage `mana_modo_emb`). **Convertido** troca os campos pelos `_eq`
+  (drill sem etiqueta; unidade física no tooltip da quantidade). **Por embalagem** abre a variedade em uma linha por embalagem,
+  em unidade física; estoque fica na linha 5M, meio bag/sacaria entram com estoque 0 (saldo = −venda) até o saldo do Protheus por embalagem.
+  Cards do resumo e top-lista ficam sempre convertidos.
+- Embalagem fora da tabela: fator None, soma 1:1 e aparece em vermelho "fora da tabela" — não some.
+- Filtro **Embalagem** (multi, junto de Uso/Estado): filtra por PEDIDO (`p.embalagem`, sem valor = 5M), igual Estado/Uso —
+  recalcula venda/devolução/saldo e o drill. Opções montadas dos pedidos (5M, 2,5M, 200 mil e qualquer outra que aparecer).
+  No modo Por embalagem filtra a própria linha (`_emb`). Estoque (produzido/compra) não tem embalagem: no Convertido
+  continua o da variedade inteira.
+
+## Faturado pela NOTA FISCAL da carga (2026-10-05)
+
+- O `quantidade_faturada` do item do SA não sobe enquanto o agendamento não é aprovado, mesmo com carga
+  Finalizada e NF emitida (260000040108/2: 4 cargas com NF = 212 bags, item com faturado 0).
+- Regra Maná (igual `agente-comercio-revendas/cargas.py`): faturado = agendamento com NF. `_aplicar_faturado_carga`
+  lê `/api/orders-scheduling` (agendados) + `/api/charge-montage` (NF), casa por `id_agrupamento + variedade`,
+  e soma a qtd agendada com NF por pedido × produto × tratamento × embalagem.
+- O item fica com `quantidade_faturada = max(SA, NF de carga)`; o original vai em `quantidade_faturada_sa` e
+  `faturado_fonte = "nf_carga"`. Vale para o Saldo a faturar do Estoque e o Entregue do TSI.
+- Falha nas cargas/agendamentos: mantém o faturado do SA (nunca zera) e serve o último mapa bom. Conferência:
+  `/api/diag/faturado/<pedido>`.
+
+## Bloqueio automático de variedade negativa no Simple Agro (2026-10-08) — `bloqueio_sa.py`
+
+- Gatilho: `saldo_bag_eq < 0` (Saldo Convertido do painel). Alcance: o PRODUTO da variedade no grupo SEMENTE DE SOJA
+  (`status=false` bloqueia todos os SKUs). Escrita: `PUT /api/productgroups/{GRUPO_SOJA_ID}/products/{produto_id}`
+  com `{"status": bool}`, sempre conferida relendo o catálogo (status mudou e nº de variações igual; senão para a rodada).
+- Rotina: thread leve (5 em 5 min) roda 1× por dia depois de `BLOQUEIO_SA_HORA` (padrão 06:30 BRT), lock
+  `pg_try_advisory_lock(7310026)` entre os 2 workers, registro em `sa_bloqueio_run`. Só bloqueia; nunca libera.
+  Rebloqueia o que alguém liberou com saldo ainda negativo. SA fora/452/sem dado: não marca o dia e tenta de novo.
+- Travas: `BLOQUEIO_SA_ATIVO=1` liga (padrão desligado); `BLOQUEIO_SA_MAX` (15) aborta se negativas demais;
+  sem vendas do SA não bloqueia nada. Log de tudo em `sa_bloqueio_log` (`/api/bloqueio/log`).
+- Painel: cadeado ao lado da variedade (vermelho = bloqueada; laranja = liberada com saldo negativo; cinza = liberada).
+  Clique bloqueia/libera via `POST /api/bloqueio/variedade` com header `X-Bloqueio-Pin` = `BLOQUEIO_SA_PIN`
+  (sem PIN configurado, o cadeado não escreve). `POST /api/bloqueio/rodar` roda a regra na hora (mesmo PIN).
+
+## Saldo de Tratamento: filtros, Falta entregar, visão Lotes e Reserva de lotes (2026-10-09)
+
+- Filtros Cultivar e Tratamento viraram multi-seleção com busca (× limpa); "Limpar filtros" zera tudo.
+- Coluna **Falta entregar** + drill (+) por código: `GET /api/tsi/falta-entregar` casa o item do pedido SA pelo
+  `codref` (= código Protheus, comparado sem zeros à esquerda). Falta = quantidade − faturado (faturado já corrigido
+  pela NF da carga). Entram aguardando aprovação / aprovado / integrado; ficam fora reprovado e tipo DEVOLUÇÃO.
+- Lotes ficam DENTRO do drill (+) do código, em abas no estilo da composição do saldo: **Falta entregar | Lotes** (não há mais switch no topo). Lotes = `GET /api/tsi/saldo-lote` ← dataset `saldo_lote` do agente-protheus (mesma
+  SELECT do saldo_produto, aberta por lote × armazém; autorizado pelo Dayan em 09/10/2026). Livre = Disponível − Reservado.
+- **Reserva de lotes** (`/reservas`, tabela `lote_reservas`): lote × código (opcional) × cliente × quantidade (bags).
+  Lançar/editar/excluir na tela ou subir .xlsx/.csv (Lote, Cliente, Quantidade; Código e Obs opcionais) —
+  soma/atualiza pela chave lote+código+cliente, nada é apagado. Reserva cujo lote não está no Protheus aparece em
+  `reservas_sem_lote` (aviso na visão Lotes).
