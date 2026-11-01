@@ -304,6 +304,15 @@
       }
     },
     {
+      "name": "agente-whatsapp-pa",
+      "source": "./plugins/agente-whatsapp-pa",
+      "description": "Bot WhatsApp de Plano de Ação integrado ao SoftExpert tmc_ws.php para Sementes Maná LTDA. Serviço Flask no Railway que recebe mensagens via agente-whatsapp (Z-API), interpreta com Claude NLP, e executa operações no SE Plano de Ação (criar planos, criar ações, consultar progresso). Suporta dois perfis: Colaborador (cria e consulta suas próprias ações) e Líder (gerencia planos nomeados com lidera...",
+      "version": "1.0.0",
+      "author": {
+        "name": "Sementes Mana LTDA"
+      }
+    },
+    {
       "name": "auditoria-ponto-mana",
       "source": "./plugins/auditoria-ponto-mana",
       "description": "Use esta skill SEMPRE que trabalhar no projeto de Auditoria de Ponto da Sementes Maná (agente-auditoria-ponto). Triggers obrigatórios: \"auditoria de ponto\", \"auditoria_ponto.html\", \"agente-auditoria-ponto\", \"espelho de ponto\", \"inconsistências de ponto\", \"gestores de ponto\", \"relatório de ponto Maná\", \"DIXI ponto\", \"melhorar o HTML de ponto\", \"validações de ponto\", \"banco de horas\", \"BH saldo\",...",
