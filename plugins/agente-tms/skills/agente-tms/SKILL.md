@@ -213,4 +213,3 @@ curl -s "https://agente-tms-production.up.railway.app/api/cotacoes?senha=mana202
 - Cobrança/parcelas SA → `agente-financeiro-sa`.
 - Envio de mensagens WhatsApp por outros motivos (notificação SE, etc.) → `agente-whatsapp` direto.
 - Roteamento inbound de outros bots → `agente-router`.
-                                                                                                                                                                                                                                                                                                                                                                                   

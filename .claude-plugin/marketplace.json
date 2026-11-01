@@ -10,7 +10,7 @@
       "name": "mana-skills",
       "source": "./plugins/mana-skills",
       "description": "Pacote institucional Mana Builder — 14 skills essenciais: mana-builder-guia (entrada), novo-agente-mana (scaffold), mana-arquitetura-padrao (LLM+WhatsApp obrigatorio), akita (seguranca), softexpert-wf-ws + softexpert-dataset-integration (SoftExpert), softexpert-analise-tempos (tempo/gargalo em processo do SE), mana-habilidade-se-dataset-reader + mana-habilidade-data-lake-pg (dados), mana-simpleagro + mana-softexpert (SDKs), mana-habilidade-notificacao-whatsapp (notificacoes), mana-memoria-operacional v1.10 (cerebro dono: 13 memorias vivas, inclui a API do SA que mente e a prova de frescor na conferencia por conjunto), onboarding-dono-agente (handoff).",
-      "version": "1.7.0",
+      "version": "1.7.1",
       "author": {
         "name": "Sementes Mana LTDA"
       }
@@ -82,7 +82,7 @@
       "name": "agente-comite-credito",
       "source": "./plugins/agente-comite-credito",
       "description": "Comitê de crédito digital da Sementes Maná — 100% no grupo WhatsApp. Flask+PG (schema comite)+Railway. Pauta do CRE-001 no painel (scred, PDF Tarken, DEC-01/02/08), convocação rica no grupo (vendedor, valores com creditodefin, gateways, Tarken + pareceres), discussão e votos via agente-router, gate humano do operador. Comandos: \"gerar ata\" (todos com ≥1 msg), \"atualizar o SE\" (100% votos; unani...",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "author": {
         "name": "Sementes Mana LTDA"
       }
@@ -136,7 +136,7 @@
       "name": "agente-financeiro-sa",
       "source": "./plugins/agente-financeiro-sa",
       "description": "Visão financeira e comercial dos pedidos Simple Agro — Sementes Maná LTDA (\"Painel Comercial SA\"). Flask no Railway, cache 20 min, 6 abas: Recebimentos/Mês, Por Pedido, Evolução, Clientes (LTV), Por Produto e Por Vendedor. A aba Por Vendedor traz ranking por receita com drill-down duplo (Vendedor→Cliente→Pedido e Vendedor→Cultivar) e filtros em cascata client-side (Vendedor, Cliente, Status, Us...",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "author": {
         "name": "Sementes Mana LTDA"
       }
@@ -164,15 +164,6 @@
       "source": "./plugins/agente-governanca",
       "description": "Plataforma de Governança por Processo da Sementes Maná — app Flask+PG (schema governanca)+Railway onde as áreas constroem a governança de cada processo em wizard guiado (SIPOC, tartaruga de 2 níveis, IC×IV Falconi, riscos↔controles N:N, requisitos auditáveis, versionamento AS IS→TO BE) e a plataforma gera o .bpmn no dialeto SoftExpert. Inclui o módulo de PLANEJAMENTO ESTRATÉGICO (método Antônio Napoli em 10 etapas) e o Maná Results — mapa estratégico BSC nas 4 perspectivas, com desdobramento estratégico→tático→operacional, e a MEDIÇÃO do indicador: grade mensal de meta e realizado, acumulado trimestral/semestral por soma, meta não-aplicável distinta de zero e velocímetro de faixas fixas (80/100/120), com o indicador-pai calculado a partir das suas linhas. O passo seguinte, de 24 a 27/08: o REALIZADO vem da fonte — bags por cultivar do agente-estoque (que também dá a meta de volume: estoque + compra − qualidade) e receita/ticket do painel comercial, com a META do ticket lida da tabela de preço da precificação (tier ALTO, à vista); mais as dimensões da venda (canal, condição de pagamento e origem) e os tipos de medida e de ligação que impedem somar o que não soma (ticket é razão, funil é direcionador), com o desdobramento de profundidade livre até a cultivar.",
       "version": "1.9.1",
-      "author": {
-        "name": "Sementes Mana LTDA"
-      }
-    },
-    {
-      "name": "agente-integracoes",
-      "source": "./plugins/agente-integracoes",
-      "description": "\"Agente de integração SoftExpert ↔ Simple Agro para Sementes Maná. Consulta pedidos de venda por CPF/CNPJ no Simple Agro e sincroniza com grids do SoftExpert Workflow. Gerencia serviço Railway Flask com dois painéis web (/painel populador de grid, /painel-reais somente leitura com drill-down grupo econômico). Use este skill sempre que precisar trabalhar com o agente-integracoes — adicionar endp...",
-      "version": "1.0.0",
       "author": {
         "name": "Sementes Mana LTDA"
       }
@@ -298,7 +289,7 @@
       "name": "agente-tms",
       "source": "./plugins/agente-tms",
       "description": "Agente TMS Maná (Sementes Maná) — planejamento de entregas + cotação de frete. Flask workers=1 + PostgreSQL banco-mana schema `tms` (ADR 2026-05-30) + Railway. Lê agendamentos do Simple Agro, painel kanban por data, rota OSRM por estrada com Ponto de Referência obrigatório, caminhão ideal pelos Perfis de Veículo (bags+tara), cotação por DM WhatsApp via agente-whatsapp. Retorno chega via agente-...",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "author": {
         "name": "Sementes Mana LTDA"
       }
@@ -307,15 +298,6 @@
       "name": "agente-whatsapp",
       "source": "./plugins/agente-whatsapp",
       "description": "Agente de envio de mensagens WhatsApp via Z-API para Sementes Maná LTDA. Serviço Flask no Railway que envia mensagens para números individuais e grupos do WhatsApp sem necessidade de aprovação de template Meta. Conecta via QR Code com número pessoal. Suporta texto livre, templates pré-definidos (crédito aprovado, reprovado, pendência de documentos) e envio em massa. Integrado ao SoftExpert como...",
-      "version": "1.0.0",
-      "author": {
-        "name": "Sementes Mana LTDA"
-      }
-    },
-    {
-      "name": "agente-whatsapp-pa",
-      "source": "./plugins/agente-whatsapp-pa",
-      "description": "Bot WhatsApp de Plano de Ação integrado ao SoftExpert tmc_ws.php para Sementes Maná LTDA. Serviço Flask no Railway que recebe mensagens via agente-whatsapp (Z-API), interpreta com Claude NLP, e executa operações no SE Plano de Ação (criar planos, criar ações, consultar progresso). Suporta dois perfis: Colaborador (cria e consulta suas próprias ações) e Líder (gerencia planos nomeados com lidera...",
       "version": "1.0.0",
       "author": {
         "name": "Sementes Mana LTDA"
@@ -379,15 +361,6 @@
       "name": "reunioes-tactiq",
       "source": "./plugins/reunioes-tactiq",
       "description": "Acesso às reuniões da Sementes Maná via Tactiq MCP + transcrições completas no Google Drive. Use SEMPRE que o Xayer pedir qualquer coisa sobre uma reunião — \"gera o HTML da reunião\" (termo principal do Xayer), resumo, action items, decisões, \"o que ficou combinado\", cruzar reuniões, transformar reunião em documento/e-mail/plano. Também quando mencionar Tactiq, transcrição, \"html da reunião\", \"r...",
-      "version": "1.0.0",
-      "author": {
-        "name": "Sementes Mana LTDA"
-      }
-    },
-    {
-      "name": "softexpert-orchestrator",
-      "source": "./plugins/softexpert-orchestrator",
-      "description": "Biblioteca Inteligente de Orquestração SoftExpert para Skills. Core library para integração segura com SoftExpert Workflow — fornece client SOAP robusto, WorkflowBuilder de alto nível, validação automática, retry com backoff, error classification (4 tipos), audit logging completo e fallback inteligente. Use esta skill como dependência para qualquer skill que precisa integrar com SoftExpert (CPR...",
       "version": "1.0.0",
       "author": {
         "name": "Sementes Mana LTDA"

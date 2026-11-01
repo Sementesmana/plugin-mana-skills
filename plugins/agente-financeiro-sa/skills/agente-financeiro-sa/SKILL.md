@@ -193,4 +193,3 @@ git push origin main     # Railway auto-deploy em ~2 min
 | `SyntaxError: unterminated triple-quoted string` ao compilar no sandbox | Mount do sandbox trunca arquivos grandes recém-editados | Falso positivo — compilar no Git Bash local |
 | Filtros cascata não atualizam | `_msApply` sem branch `ms-vend-` | Garantir branch que chama `_vendApplyFilters(id)` |
 ```
-                                                                                                                                                                                                                                                                                                                                                                            
