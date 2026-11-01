@@ -1,6 +1,6 @@
 ---
 name: novo-agente-mana
-description: "Gerador de novos agentes/apps para Sementes Maná LTDA — Flask + Jinja2 + HTMX + Alpine.js + PostgreSQL + Railway, com integrações pré-prontas para SoftExpert (SOAP via softexpert-orchestrator), Simple Agro (REST), Claude (LLM) e Z-API (WhatsApp). Use SEMPRE que for criar agente novo, app, serviço, painel ou microsserviço no ecossistema Maná. Também use quando mencionar 'criar agente', 'novo app', 'novo serviço', 'scaffold', 'boilerplate', 'template de agente', 'começar do zero', ou ao perguntar qual linguagem/framework usar. Garante: identidade visual Maná (verde #1D6B3E + ouro #B8860B), autenticação JWT, deploy Railway, integração SoftExpert, defense-in-depth (padrão akita), testes e HTMX sem React."
+description: "Gerador de novos agentes/apps para Sementes Maná LTDA — Flask + Jinja2 + HTMX + Alpine.js + PostgreSQL + Railway, com integrações pré-prontas para SoftExpert (leitura por Conjunto de Dados REST, escrita pelo SDK mana-softexpert), Simple Agro (REST), Claude (via mana-llm-gateway) e WhatsApp (via hub agente-whatsapp). Use SEMPRE que for criar agente novo, app, serviço, painel ou microsserviço no ecossistema Maná. Também use quando mencionar 'criar agente', 'novo app', 'novo serviço', 'scaffold', 'boilerplate', 'template de agente', 'começar do zero', ou ao perguntar qual linguagem/framework usar. Garante: identidade visual Maná (verde #1D6B3E + ouro #B8860B), autenticação JWT, deploy Railway, integração SoftExpert, defense-in-depth (padrão akita), testes e HTMX sem React."
 ---
 
 # Novo Agente Maná — Gerador de Stack Padrão
@@ -24,9 +24,9 @@ Skill para criar **novos agentes/apps** no ecossistema Sementes Maná LTDA segui
 - **Interatividade:** HTMX + Alpine.js (nunca React/Vue/Angular, exceto casos muito específicos)
 - **Banco:** PostgreSQL no Railway
 - **ORM:** SQLAlchemy
-- **LLM:** Anthropic SDK (Claude)
+- **LLM:** Claude SEMPRE pelo `mana-llm-gateway` (chave virtual própria) — nunca `api.anthropic.com` direto. Ver skill `mana-arquitetura-padrao`
 - **Deploy:** Railway com `railway.json` + Dockerfile
-- **SoftExpert:** via `softexpert-orchestrator` (skill existente)
+- **SoftExpert:** LEITURA por Conjunto de Dados REST (habilidade `mana-habilidade-se-dataset-reader`); ESCRITA pelo SDK `mana-softexpert`; referência dos métodos SOAP na skill `softexpert-wf-ws`
 - **Simple Agro:** via client REST padronizado (`integrations/simple_agro.py`)
 - **Navegação unificada:** via iframe no SoftExpert (não reinventar hub)
 
@@ -56,10 +56,10 @@ Antes de gerar arquivos, confirme:
 1. **Nome do agente** (ex: `agente-contratos`, `agente-relatorios`)
 2. **Propósito em 1 frase** (vai no README e no SKILL.md futuro)
 3. **Integrações necessárias** — marque as aplicáveis:
-   - [ ] SoftExpert (SOAP) — usa `softexpert-orchestrator`
+   - [ ] SoftExpert — leitura: `mana-habilidade-se-dataset-reader`; escrita: SDK `mana-softexpert`
    - [ ] Simple Agro (REST)
-   - [ ] Anthropic Claude (LLM)
-   - [ ] Z-API (WhatsApp)
+   - [ ] Claude (LLM) — via `mana-llm-gateway`
+   - [ ] WhatsApp — via hub `agente-whatsapp` (porta única: `classe` + `idempotency_key`)
    - [ ] PostgreSQL próprio
    - [ ] Outra API externa (qual?)
 4. **Tem UI (painel web)?** [s/n] — se sim, Flask; se puramente API, considere FastAPI
@@ -153,10 +153,10 @@ Cria o repo na Org, configura o `origin` e empurra — tudo de uma vez.
 │   │   └── core.py
 │   ├── integrations/           # Clients externos
 │   │   ├── __init__.py
-│   │   ├── softexpert.py       # SOAP via softexpert-orchestrator
+│   │   ├── softexpert.py       # leitura: dataset REST · escrita: SDK mana-softexpert
 │   │   ├── simple_agro.py      # REST Simple Agro
-│   │   ├── claude.py           # Anthropic SDK
-│   │   └── whatsapp.py         # Z-API
+│   │   ├── claude.py           # via mana-llm-gateway (LLM_GATEWAY_URL/KEY)
+│   │   └── whatsapp.py         # via hub agente-whatsapp (nunca Z-API direto)
 │   ├── models/                 # SQLAlchemy
 │   │   ├── __init__.py
 │   │   └── base.py
@@ -275,7 +275,8 @@ Para os arquivos-template que serão copiados, consulte:
 
 Este skill trabalha em conjunto com:
 
-- **softexpert-orchestrator** — TODO agente novo que fala com SoftExpert usa esta lib. Não reimplementar SOAP.
+- **mana-arquitetura-padrao** — OBRIGATÓRIA: LLM pelo gateway, WhatsApp pela porta única, dedup por requisição.
+- **mana-habilidade-se-dataset-reader** / SDK **mana-softexpert** / **softexpert-wf-ws** — TODO agente novo que fala com SoftExpert usa estes. Não reimplementar SOAP. (A antiga `softexpert-orchestrator` foi aposentada em 2026-11-01.)
 - **akita** — TODO agente novo segue os princípios de defense-in-depth, multi-model consensus (quando aplicável), idempotência, graceful degradation.
 - **skill-creator** — Depois de criar o agente, criar um SKILL.md específico do novo agente usando skill-creator.
 
@@ -285,9 +286,9 @@ Este skill trabalha em conjunto com:
 - ❌ Começar com Next.js/React "por via das dúvidas" (YAGNI)
 - ❌ HTML estático com dados hardcoded (não escala)
 - ❌ Criar painel sem estender `templates/base.html` (perde identidade visual)
-- ❌ Chamar SoftExpert SOAP direto sem usar `softexpert-orchestrator`
+- ❌ Chamar SoftExpert SOAP na mão em vez do SDK `mana-softexpert` (escrita) ou do Conjunto de Dados (leitura)
+- ❌ Chamar `api.anthropic.com` ou a Z-API direto (ver `mana-arquitetura-padrao`)
 - ❌ Commitar `.env` ou qualquer segredo
 - ❌ Pular testes ("depois eu faço")
 - ❌ Deploy fora do Railway "porque sim" (exceto se houver razão técnica documentada)
 - ❌ Reinventar autenticação (use JWT + SSO SoftExpert padrão)
-                                                                                                                                                                                                                                                                                                                                                                                           
