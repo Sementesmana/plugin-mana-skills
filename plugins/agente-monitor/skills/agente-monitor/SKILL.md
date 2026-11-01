@@ -1,6 +1,6 @@
 ---
 name: agente-monitor
-description: Torre de controle de runtime + cockpit de governança IA-First da Sementes Maná LTDA. Flask + APScheduler no Railway. Três missões num só serviço: (1) loop health de 19+ agentes a cada 5min com alerta WhatsApp ao grupo TI quando algum cai 2x seguidas; (2) aba Consumos com custo de IA por agente vindo do mana-llm-gateway (master key server-side, alias→modelo via /model/info) + custo de infra Railway; (3) cockpit /portfolio (catálogo canônico de 36 soluções em catalogo_solucoes.py, abas Catálogo/Construtores/Saúde/Arquitetura/Custos/Vencimentos, ADR 2026-06-13). Use SEMPRE no agente-monitor — adicionar agente ao health, threshold de alerta, cockpit /portfolio, coluna na aba Custos, consumo do gateway, catalogo_solucoes, embed no SoftExpert, alerta falso. Também quando mencionar: painel monitor, torre de controle, health check, cockpit portfolio IA-First, /api/consumo, /api/status, /api/catalogo, /api/railway-usage, catálogo canônico, AGENTES em monitor_engine, US$/req, gateway spend, CHECK_INTERVAL.
+description: Torre de controle de runtime + cockpit de governança IA-First da Sementes Maná LTDA. Flask + APScheduler no Railway. Três missões num só serviço — (1) loop health de 19+ agentes a cada 5min com alerta WhatsApp ao grupo TI quando algum cai 2x consecutivas (ALERT_AFTER_FAILURES=2, ALERT_COOLDOWN=30min, HISTORY_MAX=288 = 24h); (2) aba Consumos que lê custo de IA por agente do mana-llm-gateway (LLM_GATEWAY_MASTER_KEY server-side, resolve alias→modelo via /model/info) + custo de infra Railway via /api/railway-usage; (3) cockpit /portfolio (catálogo canônico de 36 soluções via catalogo_solucoes.py, abas Catálogo/Construtores/Saúde/Arquitetura/Custos/Vencimentos/WhatsApp, ADR 2026-06-13). Use SEMPRE em tarefas do agente-monitor — adicionar agente à lista de health, ajustar threshold de alerta, mexer no cockpit /portfolio, adicionar coluna na aba Custos, integrar consumo do gateway, popular catalogo_solucoes, embed no SoftExpert, depurar alerta falso, ou entender por que o monitor é considerado quase-N3. Também quando mencionar painel monitor, torre de controle, health check, cockpit portfolio IA-First, /api/consumo, /api/status, /api/catalogo, /api/railway-usage, catálogo canônico, AGENTES em monitor_engine, /portfolio, cockpit Maná, Reqs por agente, US$/req, gasto mês/ano por agente, total dos logs, gateway spend, master key, ALERT_COOLDOWN, CHECK_INTERVAL.
 ---
 
 # agente-monitor (Painel Monitor)
@@ -86,6 +86,8 @@ ADR vinculado: [[2026-06-13-catalogo-solucoes-manifesto-por-solucao]]. `/painel`
 | GET | `/api/consumo` | Custo consolidado (railway + zapi + gateway) |
 | GET | `/api/catalogo` | Catálogo canônico (`catalogo_completo()`) |
 | GET | `/api/outbox` | Fila do `agente-whatsapp` (proxy pra `/api/outbox` do hub) |
+| GET | `/api/railway/deploys` | **Somente leitura** (X-API-Key): por serviço, deploy NO AR × última tentativa (commit, status, data). Módulo `railway_leitura.py` |
+| GET | `/api/railway/logs` | **Somente leitura** (X-API-Key): `?servico=&projeto=&tipo=runtime|build&linhas=` — logs com máscara de segredo e PII, sem busca livre |
 | GET | `/portfolio` | Cockpit IA-First (serve `portfolio.html`) |
 | GET | `/painel` | Painel antigo (embed legacy SE) |
 
@@ -104,6 +106,7 @@ ADR vinculado: [[2026-06-13-catalogo-solucoes-manifesto-por-solucao]]. `/painel`
 - `PAINEL_SENHA=mana2026`
 - `ANTHROPIC_API_KEY` (uso futuro)
 - `WHATSAPP_OUTBOX_URL`, `WHATSAPP_OUTBOX_TOKEN` — pra aba WhatsApp ler fila do hub
+- `MONITOR_LEITURA_TOKENS` — chaves das rotas `/api/railway/*`, formato `nome:chave,nome2:chave2` (uma por consumidor, mín. 24 caracteres). Vazio = rotas respondem 503. **Por que existe:** o Railway não tem token read-only; o `RAILWAY_API_TOKEN` (poder total) fica só no servidor e o Claude/donos recebem só estas perguntas fixas (2026-11-01)
 
 ## Como adicionar agente novo à lista de health
 
