@@ -1,151 +1,89 @@
 ---
 name: mana-reports
-description: App de reports da diretoria da Sementes Maná (PWA instalável) — Flask no Railway que NÃO calcula report: lê o contrato GET /api/reports + GET /api/report/<id> dos apps Maná com a chave em header (server-side) e desenha o envelope (meta/kpis/series/colunas/grupos/linhas/filtros/regua/glossario). Renderizador genérico: report novo aparece na home sem uma linha de código nova. Traz a MAIA (pergunta em texto ou voz sobre o report aberto, com a modelagem da nota no contexto), o vigia do comitê (alerta com PNG no WhatsApp quando abre vaga na sala), admin de quem acessa, e embed no SoftExpert. Acesso por telefone da lista + código de 6 dígitos pela porta única do WhatsApp, sessão em cookie assinado; banco-mana schema reports (acessos, codigos, leituras). Use SEMPRE no mana-reports — renderizador do envelope, bloco grupos, papel de coluna, BFF e cache, MAIA e custo de token, vigia e alerta do comitê, acesso por WhatsApp, service worker, telemetria de leitura. Também quando mencionar: Reports Maná, app da diretoria, PWA de reports, REPORT_APPS, X-Report-Key, contrato de report, explicação da nota, régua e glossário, frescor do dado na tela.
+description: "Mapa do mana-reports (Sementes Maná): PWA de reports da diretoria, Flask+Railway, que NÃO calcula report — lê o contrato /api/reports e /api/report/<id> dos apps Maná com X-Report-Key server-side e desenha o envelope; MAIA (texto/voz, negociação do Maná Price via MANÁPRIC), Compartilhar PNG/PDF declarado, vigia do comitê no WhatsApp, acesso por código de 6 dígitos, embed no SoftExpert. Decisões, armadilhas, contratos e pendências. Use SEMPRE no mana-reports ou ao citar Reports Maná, app da diretoria, contrato de report, envelope, papel de coluna, bloco grupos, _so, compartilhar.pdf, REPORT_MESTRE, REPORT_APPS, chave-report.sh, MAIA, vigia do comitê, régua e glossário, frescor do dado."
 ---
 
-# mana-reports
+# mana-reports — mapa
 
-PWA de reports da diretoria. Plataforma **N1**. Versão **1.9.1** em produção.
-ADRs `2026-09-04-report-como-contrato-e-mana-reports` e
-`2026-09-04-report-contrato-bloco-grupos`.
+## O que é
+- PWA de reports da diretoria (plataforma N1). Repo `Sementesmana/mana-reports`; dono não declarado no repo. Produção: https://mana-reports-production.up.railway.app (conferida 2026-11-01) (Railway, healthcheck `/health`).
+- **Não calcula report**: desenha o envelope que o publicador (quem tem a fonte) entrega. ADRs `2026-09-04-report-como-contrato-e-mana-reports`, `2026-09-04-report-contrato-bloco-grupos`, `2026-09-23-interpretador-do-preco-mora-no-manapric`.
+- Por que existe: os reports nasceram calculados no navegador do `/painel-reais`; refazer a conta no celular daria duas contas que divergem na primeira correção. O contrato leva o cálculo para o servidor do publicador.
+- Banco-mana, schema `reports`: só acesso, códigos, telemetria de leitura, log de admin e estado do vigia. Nenhum número de report mora aqui.
 
-## A regra que organiza tudo
+## Onde está a verdade
+- `REGISTRO-DE-PUBLICADOR.md` — o contrato inteiro (kpis, linhas, meta, compartilhar, pdf), como um agente entra, o que cada publicador declara e o checklist do que já quebrou. Referência; este mapa não repete.
+- `bff.py` — descoberta de publicadores, chave derivada, cache, escrita (`gravar`). Os comentários ⚠️ contam cada cicatriz.
+- `app.py` — rotas, sessão (cookie ou Bearer), segurança/embed, canal de servidor, MAIA, `/health` e `/api/status`. `VERSAO` aqui (terceiro número = correção, segundo = funcionalidade); `/health` diz qual está no ar.
+- `static/mana-reports.js` — o renderizador genérico (não conhece report pelo nome). `maia.py`, `vigia.py`, `acesso.py`, `admin.py`, `imagem_envelope.py`/`pdf_envelope.py`, `imagem.py`, `zap.py`, `db.py` (DDL idempotente no boot; `admin.py` cria `admin_log`).
+- `tests/test_mana_reports.py` — muitas regras daqui estão travadas por teste que LÊ o código (vocabulário proibido no JS, timeout×Procfile, papel de negociar fora do `maia.py`, 16px). Teste vermelho costuma ser doutrina.
+- O detalhe de cada report (o que cada cartão soma, o que o Xayer decidiu) está na skill do **publicador**, não aqui.
 
-**Este app não calcula report.** Ele desenha o envelope que o publicador entrega. O
-renderizador (`static/mana-reports.js`) não conhece nenhum report pelo nome — ele lê
-`colunas[].papel` (`titulo`/`subtitulo`/`metrica`/`detalhe`/`grupo`) para decidir o que
-sobe ao cartão e o que abre na folha de detalhe.
+## Regras e decisões que o código não explica sozinho
+- **Se aparecer `if (report === 'x')` no renderizador, o contrato falhou.** Conserto é no publicador. Teste certo de report novo = gerar o envelope real e mandar para o renderizador, não procurar campo no JS.
+- **A conta é UMA e é do publicador.** Quando desktop e celular discordam (já houve 79 × 90 × 99 mi), refaz-se a conta no publicador com teste que sabota cada regra — nunca ajuste no renderizador.
+- Falha nunca vira vazio: fonte fora → 503 com motivo; cache só serve cópia velha ROTULADA (`_bff.em` = quando foi lida). Todo número mostra a idade (`meta.dado_de`, ISO com fuso).
+- Regra de negócio é do servidor: quem é `fila`/`sala`/`decidido` vem em `_so`. Refiltrar no cliente fez painel e alerta darem números diferentes. Subtotal de grupo é declarado, nunca somado.
+- **Escrita só declarada** (desde 2026-09-10): formulário (`formulario.campos[]` + `grava_em`), ações (`meta.acoes[]`, o BFF confere o `id` contra o envelope) e negociação. Três validações independentes, nenhuma confia na anterior: o app confere o campo em `formulario.campos[]` (o celular não pode escrever `papel_operacao`, que decide aba do ICP e entra na régua de crédito); o BFF monta o caminho de `grava_em`, nunca do corpo (senão seria proxy aberto com a chave que lê a carteira); o publicador recusa campo fora do escopo (403), e a recusa sobe COM o motivo. `gravar` esquece o cache só dos reports daquele app, nunca o catálogo. Sem senha nova: a mesma `X-Report-Key`, aceita só para campos de entrevista. Vocabulário copiado no JS é segunda declaração que envelhece.
+- Imagem e PDF só leem o declarado em `compartilhar` (royalty/germoplasma do Maná Price nunca saem). PDF sem `compartilhar.pdf` = 404 de propósito: o que vai ao vendedor é decisão explícita; a imagem tem fallback (estrutura da tela com o recorte — Xayer: em qualquer report, manda a estrutura da tela).
+- **Registro de publicador novo NÃO mexe no mana-reports**: o agente implementa o contrato com o próprio `REPORT_KEY`, entra na lista `AGENTES` do agente-monitor e recebe a chave de `bash chave-report.sh <id>` (HMAC do `REPORT_MESTRE`, mão única). Descoberta em até 15 min. Motivo: em 2026-09-10 uma aspa no JSON `REPORT_APPS` derrubou todos os reports em silêncio.
+- Ordem de força: `REPORT_<AGENTE>_URL/_KEY` > `REPORT_APPS` (legado; agente-pedidos ainda entra por ele) > descoberto. Declarar na mão é também o jeito de tirar um agente do ar sem mexer no monitor. MANÁPRIC entra por `MANAPRIC_URL/KEY` (as mesmas credenciais da MAIA; não duplicar em `REPORT_AGENTE_PRECIFICACAO_*`).
+- **A chave de contrato nunca sai do servidor**: `REPORT_MESTRE`, as derivadas e o `REPORT_APPS` só são lidos no `bff.py`. `/health` e `/admin` mostram a ORIGEM e se a chave serve, jamais a chave (nem pedaço, nem hash, nem em log). Para depurar 401, use o teste de chave do `/admin` → publicadores.
+- O `rid` se repete entre apps (`endossos-revenda` existe no comite-credito e no agente-pedidos): sempre endereçar por `<app>/<rid>`.
+- `REPORT_KEY` do publicador é variável própria — nunca reaproveitar `SECRET_KEY` (no comite-credito ela é o sal que pseudonimiza CPF/CNPJ).
+- Report `por_usuario` não passa por cache (serviria a negociação de um diretor para outro) e leva `X-Report-Usuario`.
+- **MAIA** lê o MESMO envelope da tela (segunda leitura daria direito de discordar da tela); filtro inventado pelo modelo é descartado (`filtros_validos`) porque vira lista vazia que se lê como "não há nada". Modelagem (`regua`/`glossario`) vai uma vez, após o system, para ficar cacheável. Corte de contexto (`MAX_CRITERIOS`, `_pior_dimensao`) levou de ~34 mil para ~14 mil tokens; medido ~US$ 0,036/pergunta em `mana-equilibrio`.
+- Prompt caching DESLIGADO de propósito (sem como testar contra o gateway; MAIA muda é pior que custo alto).
+- **Maná Price**: com `meta.modo == 'negociacao'` a MAIA não interpreta — repassa `{frase, historico}` para `/interpretar` do publicador e só redesenha se `_maia.aplicou`. Não recriar `SYSTEM_NEGOCIAR`/`negociar` aqui (o bot do grupo usa a mesma regra; correção de prompt vai no `interpretador.py` do MANÁPRIC).
+- **Canal de servidor** (`X-Servico-Key`, cadastro `SERVICO_KEYS` nome:chave, fail-closed): PDF (agente-preco-zap), PNG e MAIA (agente-financeiro-gestao, Comitê de Fluxo de Caixa, 2026-10-24). Só atende conversa `g:<id>` (telefone de diretor → 400); envelope sempre do publicador pelo BFF; a porta da MAIA recusa report de negociação (chave de bot só lê) e devolve `dado_de`/`idade_seg` porque no grupo ninguém vê o selo.
+- **Vigia do comitê**: gatilho é VAGA de sala, não horário (aviso sem ação ensina a ignorar). Um PNG só com crédito direto + endosso (faixa no fim). Fila = `"fila" in _so`, sem repetir regra. Estado no banco (restart não pode re-disparar); primeira leitura não alerta; ao vagar, primeiro pede ingestão e adia (até `VIGIA_ESPERA_MAX_SEG`), depois alerta. Destinatário é opt-in por pessoa (`alerta_comite`).
+- **Acesso**: telefone da lista + código pelo hub, classe `conversacional` (tem alguém esperando). Resposta idêntica dentro/fora da lista. Hash do código, nunca o código. Sessão sem prazo (`SESSAO_DIAS=0`); revogação = `ativo = FALSE`, conferido a cada request. `ADMIN_TELEFONES` resolve o primeiro admin e é porta dos fundos.
+- Sem lib de gráfico/npm: peso no 4G da fazenda. Service worker: shell cache-first, `/api/**` sempre rede.
+- Chave do gateway própria, alias `mana-reports`, sem `mana-juridico` (não pode custar 25× por engano), teto US$ 20/30d.
 
-> Se aparecer um `if (report === 'x')` no renderizador, o contrato falhou. O conserto é
-> no contrato do publicador, não aqui.
+## Armadilhas conhecidas (sintoma → causa → o que fazer)
+- Celular diz "nenhum report disponível" → JSON do `REPORT_APPS` quebrado, ou entrada com `"key":""` (bloqueia a chave derivada daquele agente → 401) → conferir `/health` (`apps_publicadores`, `apps_origem`, `descoberta`) e `/admin` → publicadores (testa cada chave sem revelá-la).
+- Agente não é descoberto → id diferente do monitor (`agente-estoque` ≠ `agente_estoque`), URL fora de `REPORT_DOMINIOS` (padrão `.up.railway.app`, só https), agente offline no monitor, ou falta `REPORT_MESTRE`/`MONITOR_URL`.
+- `chave-report.sh` gera chave errada com cara de certa → colar dois comandos juntos fazia o `read` engolir a 2ª linha; o script lê de `/dev/tty` e recusa mestre < 32 chars. Não "simplificar".
+- "Atualizei e veio o mesmo número" → cache é POR WORKER do gunicorn → recarga da tela vai com `?t=` (fresco). E "Buscar dados novos" só ingere se o publicador declara `meta.atualizar`; espera silenciosa (10 s, até 10 min) — a versão com banner/loop foi reprovada pelo Xayer.
+- Respondi e não mudou → `gravar` esquece o cache só daquele app; se mexer, manter.
+- Cartão com buraco, sem erro → ícone fora do sprite (`tag` não existe; foi a 1.8.2).
+- Hora errada na tela ("16:33… agora é 13:34") → `dado_de` sem fuso vira UTC; servidor formata em Brasília (`pdf_envelope.hoje()`), nunca `datetime.now()` cru.
+- Acentos viram "?" na imagem/PDF → container sem DejaVu → fontes em `static/fontes`; `/health.imagem_com_acento` avisa.
+- Alerta do vigia chega só texto → hub recebe PNG em base64 no JSON (`imagem`, `caption`, `extension`), não multipart (multipart é aceito e a imagem some).
+- Sessão "some" dentro do SoftExpert → cookie de terceiro bloqueado pelo Chrome mesmo com `SameSite=None` → a página embutida manda `Authorization: Bearer`; cookie e token se recompõem. `/admin?k=<ADMIN_EMBED_KEY>` entra sem código na aba do SE (Origin/Referer não servem de prova).
+- MAIA não abre o microfone → `Permissions-Policy` precisa `microphone=(self)`.
+- `/interpretar` cortado → `TIMEOUT_INTERPRETAR` (50) tem de caber no `--timeout 60` do gunicorn (teste lê Procfile e railway.toml).
+- PWA preso em versão velha → mandar abrir `/limpar` (desregistra SW e caches sem apagar a sessão). O carimbo do cache é hash dos arquivos + `VERSAO`.
+- Botão de ação perigosa trava a MAIA → nada de `confirm()` nativo; dois toques em 4 s.
+- Zoom no iPhone ao responder → controle abaixo de 16px. Etiqueta longa sai cortada ("SEM PRE…"). Tema escuro: caixas usam `--azul-caixa`/`--crit-caixa`. Variável CSS inventada é pega por teste.
+- Trocar `SESSAO_SECRET` derruba todas as sessões e invalida códigos pendentes.
+- Sem hub configurado o código não sai, mas a tela diz "se estiver na lista, o código chegou" de propósito; o resultado real fica em `/admin` (`envio_resultado`).
+- Alerta com número cru ("13000000.00") → defeito do publicador: semântica no texto, números em `valores[]`.
+- `/key/list` do gateway pagina (10 é página) e o monitor só mostra chave COM alias.
 
-⭐ **Report de outro app não pede código nenhum.** O Perfil Clientes do comitê entrou
-inteiro — régua, classe, completude, detalhe por dimensão — com zero linha nova aqui.
-Procurar o nome de um campo no JS do cliente para "ensinar" o PWA é o teste errado; o
-teste certo é **gerar o envelope real e mandar para o renderizador**.
+## Contratos com sistemas externos
+- **Publicadores** (agente-pedidos, agente-comite-credito, agente-estoque, agente-precificacao/MANÁPRIC): `GET /api/reports`, `GET /api/report/<id>`, `POST …/atualizar`, `POST` em `grava_em`/`<id>/<acao>`/`interpretar`, sempre com `X-Report-Key`. Resposta 404 na sonda = "não publico", não erro.
+- **agente-monitor**: fonte das URLs (`/api/status` → `agentes`); consome nosso `/api/status` (degradado sem banco, sem segredo ou sem publicador).
+- **Hub agente-whatsapp** (porta única, ADR 2026-06-13): `/send-whatsapp`, `/send-image` com `X-API-Key`, `classe` + `idempotency_key` por requisição + `agente=mana-reports`. Z-API direto proibido.
+- **mana-llm-gateway**: `LLM_GATEWAY_URL` raiz (o código acrescenta `/v1/chat/completions`), modelo `MAIA_MODELO` (padrão `mana-equilibrio`). A negociação gasta na chave do agente-precificacao, não na nossa.
+- **OpenAI direto** para voz: Whisper (ouvir, no servidor porque o reconhecimento do navegador difere entre iPhone e Android) e TTS `tts-1` (voz `nova`).
+- **SoftExpert**: só embed (iframe); `EMBED_ORIGENS` padrão com os dois domínios do SE; vazio = iframe proibido. Nada é escrito no SE.
 
-## Arquivos
+## Como testar e subir
+- `pip install -r requirements.txt -r requirements-dev.txt` e `python -m pytest tests/ -q`; suíte verde antes de push.
+- Defeito daqui muitas vezes não dá erro (linha que se contradiz, ícone buraco, filtro que não filtra): gerar envelope real, servir com publicador de mentira (`servir.py` + `dados.json`; mudou o JSON, reinicie), Playwright 390×844, `device_scale_factor=2`, dois temas, e OLHAR. Para regra nova, um guarda de sabotagem que fique vermelho antes do código certo.
+- Deploy = `git push` (Railway, Nixpacks, gunicorn 2 workers × 4 threads). Depois: `/health` (versão, `apps_origem`, `descoberta`, `imagem_com_acento`, `maia`) e `/api/status`.
+- Subir `VERSAO` a cada entrega que muda o que o diretor vê.
 
-| arquivo | responsabilidade |
-|---|---|
-| `app.py` | rotas, sessão, cabeçalhos de segurança, telemetria, versão do cache estático |
-| `bff.py` | lê os contratos com a chave em header, cache com TTL, **serve cache rotulado** quando a fonte cai |
-| `acesso.py` | código de 6 dígitos pelo hub do WhatsApp, hash, sessão assinada |
-| `admin.py` | cadastro de quem acessa, teste de envio, diagnóstico, log de ação, leituras |
-| `maia.py` | contexto enxuto do report aberto + pergunta/ouvir/falar |
-| `vigia.py` | ronda do comitê: lê salas e fila, decide se manda alerta |
-| `imagem.py` | PNG do alerta (Pillow) — a fila desenhada para cair no grupo |
-| `zap.py` | envio pelo hub (texto e imagem), sempre com `classe` e `idempotency_key` |
-| `db.py` | schema `reports` (acessos, codigos, leituras) — DDL idempotente no boot |
-| `static/mana-reports.js` | o renderizador do envelope |
-| `static/mana-reports.css` | tokens da identidade Maná (verde/ouro, Playfair + DM Sans) |
+## Pendências e desalinhamentos
+- **Vigia em 2 workers**: `VIGIA_ESTE_WORKER` vale `1` por padrão e a env é a mesma para os dois workers do Procfile → os dois rodam a ronda (o estado no banco reduz, mas não elimina, alerta duplicado). A skill antiga dizia que a variável restringe a um worker; não restringe. Resolver com advisory lock ou worker dedicado.
+- Migrar agente-pedidos do `REPORT_APPS` para chave derivada e então apagar o JSON. O diagnóstico de `/admin` ainda fala só em `REPORT_APPS`.
+- F2: `/painel-reais` consumir o contrato e a cópia JS morrer (1º passo: `reports.exposicao_painel` no publicador). F3: habilidade `mana-habilidade-report-contract` na Maná Builder. Sala "carregamento" fora do comitê por enquanto.
+- Prompt caching na MAIA quando der para testar no gateway.
+- Docstrings defasadas (não confiar): `app.py` diz "nenhuma escrita"; `bff.py` diz registro só por `REPORT_APPS`; `requirements-dev.txt` diz que Pillow não é usado em produção (é); `REGISTRO-DE-PUBLICADOR.md` cita `/negociar` (hoje `/interpretar`). `.env.example` lista só o básico (faltam `REPORT_MESTRE`, `MONITOR_URL`, `MANAPRIC_*`, `SERVICO_KEYS`, `LLM_GATEWAY_*`, `OPENAI_API_KEY`, `ADMIN_EMBED_KEY`, `VIGIA_*`). CLAUDE.md diz cadastro por SQL; hoje é pelo `/admin`.
 
-## Invariantes (não quebre)
-
-1. **Falha nunca vira vazio.** Fonte indisponível é 503 com motivo. Lista vazia só quando
-   o publicador disser que está vazia.
-2. **Todo número na tela exibe a idade do dado** (`meta.dado_de`). Sem frescor, não desenha.
-3. **A chave dos contratos não sai do servidor.** `REPORT_APPS` é lido só no `bff.py`.
-4. **Subtotal de grupo é declarado**, nunca somado das linhas (a meta não está nas linhas).
-5. **Regra de negócio é do servidor.** Quem pertence a `fila`/`sala`/`decidido` vem em
-   `_so`, declarado pelo publicador. Refiltrar no cliente é como painel e alerta passaram
-   a dar números diferentes.
-6. **Resposta igual** para telefone de dentro e de fora da lista no pedido de código.
-7. **WhatsApp só pelo hub**, com `classe`, `idempotency_key` e `agente` (ADR 2026-06-13).
-
-## Registrar um publicador novo
-
-Env `REPORT_APPS` (JSON): `{"agente-x": {"url": "https://…", "key": "<REPORT_KEY dele>"}}`.
-Nada além disso — o catálogo e os reports aparecem sozinhos, o BFF agrega todos os apps
-registrados (não existe lista para editar no código).
-
-⚠️ **`REPORT_KEY` é variável separada — nunca reaproveite a `SECRET_KEY` do publicador.**
-No `agente-comite-credito` ela é o sal do HMAC que pseudonimiza CPF/CNPJ; vazá-la em
-header HTTP quebraria os hashes de todas as safras, em silêncio.
-
-⚠️ **Ícone que o sprite não tem NÃO dá erro:** o `<use>` aponta para nada e o cartão sai
-com um buraco (foi a 1.8.2). Report novo pede o ícone no sprite.
-
-⚠️ **JSON quebrado no `REPORT_APPS` esvazia o catálogo** sem estourar exceção. Depois de
-mexer, confira `/health` → `apps_publicadores`.
-
-## MAIA — o que a tela mostra, ela tem de receber
-
-Pergunta em texto ou voz sobre **o report aberto**. O contexto sai de
-`maia.montar_contexto(env)`: KPIs, colunas com papel, linhas enxutas, e a **modelagem** —
-`regua` (pesos e cortes) e `glossario` (o que cada dimensão mede, como cada critério
-pontua). Sem a modelagem ela sabe a nota e nenhuma das contas, e responde "não tenho isso".
-
-- **O modelo vai UMA vez**, como mensagem própria depois do system. É igual para todos, e
-  é isso que o torna cacheável — cache só funciona em prefixo estável.
-- `MAX_LINHAS = 160`. `MAX_CRITERIOS = 12` (medido: 12 clientes com detalhe cheio ~9 mil
-  tokens de entrada; 25 dariam ~18 mil, mais que a lista inteira em modo compacto).
-- Lista grande manda por linha só **onde perdeu mais ponto** (`_pior_dimensao`), não o
-  placar por dimensão.
-
-⚠️ **CUSTO:** o placar cheio em 160 linhas custava ~20.700 tokens em **toda** pergunta,
-inclusive nas que não eram sobre cliente nenhum. Com o corte: 34.100 → 14.300 (−58%).
-Medido em produção: **US$ 0,036 por pergunta** com `mana-equilibrio` (Sonnet).
-
-**Prompt caching não está ligado** de propósito: mandar `cache_control` sem poder testar
-contra o gateway arrisca derrubar toda pergunta, e MAIA muda é defeito pior que custo
-alto. O prefixo já está isolado para quando der para testar.
-
-## Custo no gateway
-
-Chave virtual própria, alias `mana-reports`, **sem `mana-juridico`** — uma chave que não
-alcança Opus não pode custar 25× por engano. Teto de US$ 20/30d como disjuntor.
-
-⚠️ A aba Consumos do `agente-monitor` **não tem lista fixa**: lê `/key/list` e monta uma
-linha por `key_alias`. Chave sem alias não aparece; a master é ignorada de propósito.
-"Não aparece no monitor" quase sempre é chave sem nome ou sem chave própria.
-⚠️ `/key/list` **pagina** — 10 é o tamanho da página, não o total.
-
-## O vigia do comitê
-
-Ronda de `VIGIA_INTERVALO_MIN` em `VIGIA_INTERVALO_MIN` minutos: lê as salas do report do
-comitê e, quando abre vaga, manda **um** PNG com a fila para os destinatários.
-
-- **É um relatório só.** Crédito direto e endosso esperam a mesma sala e vão na mesma
-  lista, com os endossos numa faixa no fim. Duas imagens obrigariam a somar duas filas na
-  cabeça — o trabalho que o alerta veio poupar.
-- A fila é `"fila" in l["_so"]` — já sem quem está em sala e sem quem a ata decidiu. O
-  vigia **não repete essa regra**.
-- `VIGIA_ESTE_WORKER=1` para um worker só rodar a ronda; `VIGIA_ESPERA_MAX_SEG` segura
-  alerta com dado velho.
-
-## Embed no SoftExpert
-
-`EMBED_ORIGENS` (já vem com os dois domínios do SE). Com ela: sai o
-`X-Frame-Options: DENY` e entra `Content-Security-Policy: frame-ancestors`, o cookie vai
-como `SameSite=None` (dentro do iframe o `Lax` não viaja e a sessão "some" sem erro) e as
-POSTs de admin passam a conferir a `Origin`. Vazia = iframe proibido.
-
-## Gotchas
-
-- `sw.js` é servido da **raiz**: em `/static/` o service worker não controlaria a home.
-- A sessão **não expira** por padrão (`SESSAO_DIAS=0`). Revogação é `ativo = FALSE` em
-  `reports.acessos`, conferido a cada request.
-- Trocar `SESSAO_SECRET` derruba todas as sessões **e** invalida códigos pendentes (ele
-  entra no hash do código).
-- Sem `WHATSAPP_HUB_URL`/`KEY` o código não é enviado e o log avisa — a tela continua
-  dizendo "se estiver na lista, o código chegou", de propósito.
-- Quem formata dinheiro é o cliente. Alerta com número cru no texto
-  ("faltam 13000000.00") é defeito do publicador: ele declara a semântica no texto e
-  manda os números em `valores[]`.
-
-## Como testar de verdade
-
-Este app tem uma classe de defeito que **não dá erro**: linha que se contradiz, ícone
-ausente virando buraco, filtro que não filtra. Teste não pega; olhar pega.
-
-1. Gere o **envelope real** do publicador e sirva com um publicador de mentira.
-2. Suba a app local apontada para ele.
-3. `playwright` em viewport de celular, screenshot, e **olhe**.
-
-Três vezes no mesmo dia a prévia renderizada pegou "falta: BRUNO, CARLA" ao lado de
-"todos se manifestaram". Quem lê acredita na segunda, que parece conclusão.
-
-A paridade JS×Python (no publicador) extrai o JS real da f-string do painel e prova que
-painel e contrato casam a ata com **as mesmas linhas** — sabotando a função de chave o
-teste acusa na hora.
+## Para ir além
+- `CLAUDE.md` do repo; `README.md` (por que existe, acesso, service worker, fases); `REGISTRO-DE-PUBLICADOR.md`.
+- Nota do vault `ManaVault/06-Agentes-e-Skills/mana-reports.md`; ADRs em `ManaVault/08-Decisoes/` (os três acima + 2026-06-13 porta única).
+- Skills dos publicadores (agente-pedidos, agente-comite-credito, agente-estoque, agente-precificacao) para o significado de cada número.
