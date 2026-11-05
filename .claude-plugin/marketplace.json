@@ -253,7 +253,7 @@
       "name": "agente-protheus",
       "source": "./plugins/agente-protheus",
       "description": "Gateway REST de LEITURA do Protheus da Sementes Maná (Flask/Railway, conecta direto no SQL Server via pymssql, não via dataset do SE). Expõe datasets catalogados em /query/<dataset> com auth obrigatória (X-API-Key por consumidor, CORS restrito ao SE, cookie no painel). Use SEMPRE no agente-protheus: dataset novo, cache, auth, CORS, pymssql/FreeTDS, timeouts. Também quando mencionar SA1010, SE1010, SE2010, SE5010, SC7010, NP9010, SBF010, P12_PROD, estoque de semente por cultivar × tratamento, safra de produção × comercialização (defasada um ciclo), faturamento/faturamento_detalhe, E1_VENCORI, natureza 400101/400103, RA, royalty, romaneio, NJJ010/NJK010/NJM010, datasets ubs_* do ubs-mana, dataset restrito por consumidor (403), cache desligado por dataset.",
-      "version": "1.4.0",
+      "version": "1.5.0",
       "author": {
         "name": "Sementes Mana LTDA"
       }
