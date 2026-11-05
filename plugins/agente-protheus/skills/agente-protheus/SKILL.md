@@ -1,6 +1,6 @@
 ---
 name: agente-protheus
-description: "Gateway REST de LEITURA do Protheus da Sementes Maná (Flask/Railway, conecta direto no SQL Server via pymssql, não via dataset do SE). Expõe datasets catalogados em /query/<dataset> com auth obrigatória (X-API-Key por consumidor, CORS restrito ao SE, cookie no painel). Use SEMPRE no agente-protheus: dataset novo, cache, auth, CORS, pymssql/FreeTDS, timeouts. Também quando mencionar SA1010, SE1010, SE2010, SE5010, SC7010, NP9010, SBF010, P12_PROD, estoque de semente por cultivar × tratamento, safra de produção × comercialização (defasada um ciclo), faturamento/faturamento_detalhe, E1_VENCORI, natureza 400101/400103, RA, royalty."
+description: "Gateway REST de LEITURA do Protheus da Sementes Maná (Flask/Railway, conecta direto no SQL Server via pymssql, não via dataset do SE). Expõe datasets catalogados em /query/<dataset> com auth obrigatória (X-API-Key por consumidor, CORS restrito ao SE, cookie no painel). Use SEMPRE no agente-protheus: dataset novo, cache, auth, CORS, pymssql/FreeTDS, timeouts. Também quando mencionar SA1010, SE1010, SE2010, SE5010, SC7010, NP9010, SBF010, P12_PROD, estoque de semente por cultivar × tratamento, safra de produção × comercialização (defasada um ciclo), faturamento/faturamento_detalhe, E1_VENCORI, natureza 400101/400103, RA, royalty, romaneio, NJJ010/NJK010/NJM010, datasets ubs_* do ubs-mana, dataset restrito por consumidor (403), cache desligado por dataset."
 ---
 
 # agente-protheus — gateway REST → Protheus (SQL Server)
@@ -29,8 +29,16 @@ O docstring do `app.py` descreve "gateway via SE Conjunto de Dados (DI006)" e li
 | `estoque` | NP9010 + SBF010 (+ SB5010/NKD010) | `SAFRA`, `FILIAL` | semente por cultivar × tratamento |
 | `faturamento` | SE1010 **agregada** | `FILIAIS`, `EMISSAO_DE` | faturado por cliente × vencimento original |
 | `faturamento_detalhe` | SE1010 + SA1010 | **`CLIENTES`**, `FILIAIS`, `EMISSAO_DE` | as NOTAS das raízes pedidas, linha a linha |
+| `faturamento_sementes` | SFT010 + SD1/SD2 + SA1/SA2 | `FILIAIS`, `DATA_DE`, `DATA_ATE` | livro fiscal de semente item a item (agente-rrm) |
+| `ubs_recepcao` 🔒 | NJJ010 + NJK/NJ0/NJR/SB1/SB5/NP4/SFT | `ANO` | romaneios de recepção do ano — aba Cargas do ubs-mana |
+| `ubs_romaneio` 🔒⛔cache | NJJ010 + cadastros | **`ROMANEIO`**, `FILIAL` | cabeçalho do romaneio **com CPF/CNPJ e CNH** |
+| `ubs_romaneio_classificacao` 🔒⛔cache | NJK010 | **`ROMANEIO`**, `FILIAL` | classificação/descontos |
+| `ubs_romaneio_comercializacao` 🔒⛔cache | NJM010 | **`ROMANEIO`**, `FILIAL` | entidade/contrato/nota por item |
+| `ubs_empresa` | SYS_COMPANY | **`FILIAL`** | dados da filial (cabeçalho do romaneio) |
 
-São **dez**. Falta só `pedidos` de venda (SC5010). **Dataset novo entra no catálogo** — não criar rota solta.
+🔒 = restrito ao consumidor `ubs-mana` (outros levam **403**) · ⛔cache = nunca entra no cache em memória.
+
+São **dezesseis** (onze de antes + cinco `ubs_*`). Falta `pedidos` de venda (SC5010). **Dataset novo entra no catálogo** — não criar rota solta.
 
 ⚠️ Versões antigas desta skill listavam dois ou quatro, e mandavam procurar estoque na SB1010. A **SB1010 é cadastro, não saldo**: o saldo de semente é por ENDEREÇO (SBF010) e a ficha do lote é a NP9010.
 
@@ -161,7 +169,24 @@ contradiz o total logo acima dele, que é o jeito mais rápido de um painel perd
 inteira usa; cachear guardaria dezenas de recortes diferentes para servir cada um uma vez.
 
 
-## Endpoints
+### Os datasets `ubs_*` — porte fiel do ubs-mana (2026-11-05)
+
+Vieram de `ubs-mana/server/erp/consultas/*.sql` (app do Wesley, migrando do SRV-APP-IA para o Railway). **Mesmos nomes de coluna** do .sql original, para o app não mudar; as regras DESC_TIPO, CLASSE e o corte "SOJA GRAO" ficam no consumidor (`server/erp/fontes.js`), como no Power Query.
+
+- **Leitura sem bloqueio:** cada consulta abre com `SET NOCOUNT ON; SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;` (`_UBS_PREAMBULO`). Seguro porque `_get_connection` abre conexão NOVA a cada consulta — se um dia virar pool, esse SET passa a valer para os outros datasets.
+- **Romaneio:** `ROMANEIO` obrigatório, só letras e dígitos, **zeros à esquerda preservados** (a chave é filial + código com zeros). `FILIAL` vazia = primeira filial que tem o código (`_ubs_resolver_romaneio`). Inválido ou inexistente → lista vazia, sem tocar na NJJ.
+- **Recepção:** `ANO` fora de 2000..2100 cai no ano corrente de SP. Cacheia 5 min (o sincronizador do app roda a cada 15).
+- ⚠️ **Defeitos herdados, mantidos de propósito:** o pivot da NJK não filtra `D_E_L_E_T_` nem `NJK_FILIAL` (UMI/IMP podem misturar filiais com o mesmo código de romaneio) e os joins de SB1010/DA4010 não filtram `D_E_L_E_T_`. Porte fiel para conferir número a número contra o app atual no paralelo; **corrigir nos dois lados juntos ao fim do paralelo**.
+
+### Dataset restrito e cache desligado (LGPD)
+
+Duas chaves opcionais no catálogo, genéricas — servem para qualquer dataset futuro com dado pessoal:
+
+- `"consumidores": ["ubs-mana"]` → `consumidor_pode()` + 403 na rota `/query`. Só passam chaves de `API_KEYS` com esses nomes; **cookie do painel e `PAINEL_SENHA` legada não passam**. Sem a chave = aberto a qualquer autenticado (comportamento de sempre).
+- `"cache": False` → o resultado nunca entra nem sai do cache em memória.
+
+O gateway entrega CPF/CNH **cru** ao ubs-mana; **mascarar por permissão é papel do app**.
+
 
 | Rota | Auth | O que faz |
 |---|---|---|
@@ -187,7 +212,7 @@ inteira usa; cachear guardaria dezenas de recortes diferentes para servir cada u
 
 ## Auth — chave por consumidor
 
-`API_KEYS` é `nome:chave,nome2:chave2`. O log registra `[AUTH] consumidor=<nome>`, então dá pra saber quem chamou e revogar um sem derrubar os outros. Consumidores: `financeiro` e `estoque`.
+`API_KEYS` é `nome:chave,nome2:chave2`. O log registra `[AUTH] consumidor=<nome>`, então dá pra saber quem chamou e revogar um sem derrubar os outros. Consumidores: `financeiro`, `estoque` e `ubs-mana` (este com o nome EXATO `ubs-mana` — é o que libera os datasets 🔒; nome diferente = 403 em tudo).
 
 ⚠️ Chave **sem** o `nome:` na frente o parser **descarta em silêncio** — sem erro e sem log, ela simplesmente não existe e o consumidor toma 401. E `_API_KEYS` é lido no import: chave nova só vale depois do restart.
 
