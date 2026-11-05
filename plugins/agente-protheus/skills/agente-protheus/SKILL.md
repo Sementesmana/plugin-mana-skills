@@ -35,10 +35,17 @@ O docstring do `app.py` descreve "gateway via SE Conjunto de Dados (DI006)" e li
 | `ubs_romaneio_classificacao` 🔒⛔cache | NJK010 | **`ROMANEIO`**, `FILIAL` | classificação/descontos |
 | `ubs_romaneio_comercializacao` 🔒⛔cache | NJM010 | **`ROMANEIO`**, `FILIAL` | entidade/contrato/nota por item |
 | `ubs_empresa` | SYS_COMPANY | **`FILIAL`** | dados da filial (cabeçalho do romaneio) |
+| `ubs_producao` 🔒 | SD3010 (TM 002 com OP) + NP9/CTT/SB1/SB5/NKD | `SAFRAS` | produção por lote — aba Produção |
+| `ubs_descarte` 🔒 | SD3010 RE7→DE7 (SOJA GRAO) | `ANO` | descarte — aba Produção |
+| `ubs_perda` 🔒 | SFT010 saída, finalidade BAIXA, SOJA DEST | `ANO` | perda |
+| `ubs_estoque_lote` 🔒 | SBF010 0201 + NP9/SB8/SDD/SDC/SC2/SC9 | — | estoque por endereço/lote — Estoque e Detalhe |
+| `ubs_estoque_saldo` 🔒 | SBF010 0201 (próprio) ⟗ SB6010 (terceiros) | — | saldo MANA/SGL — Estoque Novo |
+| `ubs_venda` 🔒 | SFT010 saída SPED, finalidade VENDA | `ANO` | venda de semente de soja |
+| `ubs_metas` 🔒 | NN3010 filial 02 + NNV | — | metas por talhão — Metas e Planejamento |
 
 🔒 = restrito ao consumidor `ubs-mana` (outros levam **403**) · ⛔cache = nunca entra no cache em memória.
 
-São **dezoito** em produção (conferido em `/datasets`, 2026-11-05); `saldo_produto` e `saldo_lote` ainda sem linha nesta tabela. Falta `pedidos` de venda (SC5010). **Dataset novo entra no catálogo** — não criar rota solta.
+São **vinte e cinco** (18 conferidos em `/datasets` em 2026-11-05 + 7 `ubs_*` da Fase 2b); `saldo_produto` e `saldo_lote` ainda sem linha nesta tabela. Falta `pedidos` de venda (SC5010). **Dataset novo entra no catálogo** — não criar rota solta.
 
 ⚠️ Versões antigas desta skill listavam dois ou quatro, e mandavam procurar estoque na SB1010. A **SB1010 é cadastro, não saldo**: o saldo de semente é por ENDEREÇO (SBF010) e a ficha do lote é a NP9010.
 
@@ -178,7 +185,22 @@ Vieram de `ubs-mana/server/erp/consultas/*.sql` (app do Wesley, migrando do SRV-
 - **Recepção:** `ANO` fora de 2000..2100 cai no ano corrente de SP. Cacheia 5 min (o sincronizador do app roda a cada 15).
 - ⚠️ **Defeitos herdados, mantidos de propósito:** o pivot da NJK não filtra `D_E_L_E_T_` nem `NJK_FILIAL` (UMI/IMP podem misturar filiais com o mesmo código de romaneio) e os joins de SB1010/DA4010 não filtram `D_E_L_E_T_`. Porte fiel para conferir número a número contra o app atual no paralelo; **corrigir nos dois lados juntos ao fim do paralelo**.
 
-### Dataset restrito e cache desligado (LGPD)
+### Os datasets `ubs_*` da Fase 2b — abas que vinham do Power BI (2026-11-05)
+
+Porte de `ubs-mana/scripts/pbix-consultas/*.m` (o .pbix "BI - Maná - UBS"). Regras:
+
+- **Mesmos FROM/JOIN/WHERE do .m**, inclusive os que multiplicam linha; **SELECT só com as colunas que as telas usam** (`exportar_pbix.py` → `COLUNAS`). Venda e Perda traziam CNPJ/nome do parceiro: ficaram fora.
+- **"Ano corrente" virou `ANO`**: `campo BETWEEN CAST(%s AS char(8)) AND CAST(%s AS char(8))`. O CAST é porque o pymssql manda `str` como `N'...'` (nvarchar) e a comparação com char(8) forçaria conversão implícita na coluna. `SAFRAS` (produção) aceita texto com vírgula ou lista JSON; padrão = as 3 safras fixas do .pbix.
+- ⚠️ **pymssql + `%`**: com parâmetros, todo `%` de LIKE vai como `%%`; sem parâmetros, `%` simples. Um teste confere os 7.
+- **Texto sai como char do Protheus (espaços no fim)** e data vazia sai `''`: aparar/tratar é do consumidor (`texto()` em `server/erp/fontes.js` do ubs-mana). As classificações do Power Query (OPERAÇÃO REPASSE, CLASSIFICAÇÃO ADTM/ADTP) também.
+- Insumos **não** tem dataset: o .m depende de duas sub-consultas que não vieram com o código. Tela "Em desenvolvimento" no ubs-mana.
+- ⚠️ **Defeitos herdados do .pbix, mantidos para conferir número a número no paralelo** (corrigir nos dois lados juntos depois):
+  - `ubs_estoque_saldo`: FULL OUTER JOIN Próprio × Terceiros **só pelo código do produto** → N lotes × M terceiros = N×M linhas (infla saldo).
+  - `ubs_estoque_lote` / `ubs_estoque_saldo`: joins de SDD/SDC (bloqueio/empenho) e SC2/SC9 podem repetir a linha do endereço.
+  - `ubs_perda` / `ubs_venda`: joins de SF3/SD2/SA1/SA2 podem repetir item.
+  - `ubs_metas`: NN3010 sem filtro `D_E_L_E_T_`.
+- Volume hoje (snapshot do .pbix): fEstoque 281 linhas, Estoque 748 — longe do teto de cache (`CACHE_MAX_LINHAS = 5000`); se passar, a aba vai direto ao SQL a cada abertura.
+
 
 Duas chaves opcionais no catálogo, genéricas — servem para qualquer dataset futuro com dado pessoal:
 
