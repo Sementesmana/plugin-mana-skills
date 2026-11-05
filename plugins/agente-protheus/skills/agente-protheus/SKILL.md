@@ -38,7 +38,7 @@ O docstring do `app.py` descreve "gateway via SE Conjunto de Dados (DI006)" e li
 
 🔒 = restrito ao consumidor `ubs-mana` (outros levam **403**) · ⛔cache = nunca entra no cache em memória.
 
-São **dezesseis** (onze de antes + cinco `ubs_*`). Falta `pedidos` de venda (SC5010). **Dataset novo entra no catálogo** — não criar rota solta.
+São **dezoito** em produção (conferido em `/datasets`, 2026-11-05); `saldo_produto` e `saldo_lote` ainda sem linha nesta tabela. Falta `pedidos` de venda (SC5010). **Dataset novo entra no catálogo** — não criar rota solta.
 
 ⚠️ Versões antigas desta skill listavam dois ou quatro, e mandavam procurar estoque na SB1010. A **SB1010 é cadastro, não saldo**: o saldo de semente é por ENDEREÇO (SBF010) e a ficha do lote é a NP9010.
 
